@@ -32,6 +32,13 @@ span {
 	max-width: 600px;
 }
 
+.form-btns {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
 .form-btn {
 	min-width: 75px;
 }
@@ -186,5 +193,10 @@ p {
 	span {
 		min-width: 300px;
 		max-width: 300px;
+	}
+
+	form {
+		max-width: 300px;
+		height: fit-content;
 	}
 }
