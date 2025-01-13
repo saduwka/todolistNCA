@@ -88,6 +88,13 @@ button:hover {
 	margin-right: 5px;
 }
 
+.editable-field {
+	background-color: #f0f8ff;
+	border-radius: 5px;
+	border: 1px solid #007bff;
+	padding: 5px;
+}
+
 @media (max-width: 480px) {
 	body {
 		font-size: 12px;

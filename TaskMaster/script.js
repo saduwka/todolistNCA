@@ -48,11 +48,13 @@ function renderTasks() {
 			const taskElement = document.createElement("div");
 			taskElement.className = `task ${task.completed ? "completed" : ""}`;
 			taskElement.innerHTML = `
-        <h3>${task.title}</h3>
-        <p>${task.description}</p>
+        <h3 id="title-${index}" class="task-title">${task.title}</h3>
+        <p id="description-${index}" class="task-description">${
+				task.description
+			}</p>
         <p><strong>Date:</strong> ${task.date}</p>
         <button onclick="toggleTask(${index})">${
-				task.completed ? "Mark as Incomplete" : "Mark as Complete"
+				task.completed ? "Incomplete" : "Complete"
 			}</button>
         <button onclick="editTask(${index})">Edit</button>
         <button onclick="confirmDelete(${index})">Delete</button>
@@ -73,12 +75,45 @@ function toggleTask(index) {
 	renderTasks();
 }
 
-// Edit a task
+// Edit task
 function editTask(index) {
-	const task = tasks[index];
-	taskTitle.value = task.title;
-	taskDescription.value = task.description;
-	deleteTask(index);
+	const titleElement = document.getElementById(`title-${index}`);
+	const descriptionElement = document.getElementById(`description-${index}`);
+
+	// If already in editing mode, save the changes
+	if (titleElement.hasAttribute("contenteditable")) {
+		tasks[index].title = titleElement.innerText;
+		tasks[index].description = descriptionElement.innerText;
+
+		// Disable editing mode and remove background color
+		titleElement.removeAttribute("contenteditable");
+		descriptionElement.removeAttribute("contenteditable");
+		titleElement.classList.remove("editable-field");
+		descriptionElement.classList.remove("editable-field");
+
+		// Change button back to "Edit"
+		const editButton = titleElement
+			.closest(".task")
+			.querySelector("button:nth-child(2)");
+		editButton.textContent = "Edit";
+	} else {
+		// Enable editing mode and add background color
+		titleElement.setAttribute("contenteditable", "true");
+		descriptionElement.setAttribute("contenteditable", "true");
+		titleElement.classList.add("editable-field");
+		descriptionElement.classList.add("editable-field");
+
+		// Change button to "Save"
+		const editButton = titleElement
+			.closest(".task")
+			.querySelector("button:nth-child(2)");
+		editButton.textContent = "Save";
+
+		// Focus and select the text inside the task title and description
+		titleElement.focus();
+		document.execCommand("selectAll", false, null);
+	}
+	renderTasks();
 }
 
 // Delete a task with confirmation
@@ -131,11 +166,10 @@ taskTitle.addEventListener("keydown", function (e) {
 
 // Display alert before the user leaves the page
 window.addEventListener("beforeunload", function (event) {
-	// Check if there are unsaved tasks
 	if (tasks.length > 0) {
 		const message = "You have unsaved tasks. Do you want to save them?";
-		event.returnValue = message; // Standard for most browsers
-		return message; // Some browsers need this as well
+		event.returnValue = message;
+		return message;
 	}
 });
 
