@@ -27,8 +27,6 @@ form {
 
 #input-text {
 	resize: none;
-	border-radius: 5px;
-	padding: 5px;
 }
 
 span {
@@ -43,12 +41,10 @@ span {
 	justify-content: center;
 	flex-wrap: wrap;
 	gap: 10px;
-	
 }
 
 .form-btn {
 	min-width: 75px;
-	padding: 5px;
 }
 
 .notes-area {
@@ -182,7 +178,7 @@ textarea {
 }
 
 button {
-	transition: 0.4s;
+	transition: 0.3s;
 }
 button:hover {
 	scale: 105%;
@@ -199,7 +195,7 @@ p {
 
 @media (max-width: 1000px) {
 	#input-text {
-		max-width: 250px;
+		max-width: 150px;
 		max-height: 75px;
 	}
 

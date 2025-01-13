@@ -1,0 +1,121 @@
+body {
+	font-family: Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	background-color: #f4f4f9;
+}
+
+.container {
+	max-width: 1000px;
+	margin: 50px auto;
+	background: #fff;
+	padding: 20px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	border-radius: 8px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+h1 {
+	text-align: center;
+	color: #333;
+}
+
+.input-area {
+	display: flex;
+	gap: 10px;
+	width: 100%;
+}
+
+#fileInput {
+	width: 100%;
+}
+
+input,
+textarea,
+button {
+	width: 100%;
+	padding: 10px;
+	margin-bottom: 10px;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+}
+
+button {
+	background-color: #007bff;
+	color: #fff;
+	border: none;
+	cursor: pointer;
+}
+
+button:hover {
+	background-color: #0056b3;
+}
+
+#taskList {
+	margin-top: 20px;
+	width: 100%;
+}
+
+.task-input {
+	display: flex;
+	flex-direction: column;
+	width: 90%;
+	align-items: center;
+}
+
+#addTask {
+	width: 100%;
+}
+
+.task {
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	margin-bottom: 10px;
+	padding: 10px;
+	border-radius: 5px;
+}
+
+.task.completed {
+	background: #d4edda;
+	text-decoration: line-through;
+}
+
+.task button {
+	width: auto;
+	margin-right: 5px;
+}
+
+@media (max-width: 480px) {
+	body {
+		font-size: 12px;
+	}
+
+	h1 {
+		font-size: 1.5rem;
+	}
+
+	#taskTitle,
+	#taskDescription {
+		font-size: 0.9rem;
+	}
+
+	#taskList {
+		padding: 0;
+	}
+
+	.task {
+		padding: 8px;
+	}
+
+	button {
+		font-size: 0.7rem;
+		padding: 5px 10px;
+	}
+
+	label {
+		font-size: 0.9rem;
+	}
+}
