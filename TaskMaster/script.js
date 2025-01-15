@@ -1,4 +1,6 @@
 let tasks = [];
+const tasksPerPage = 5;
+let currentPage = 1;
 
 // DOM Elements
 const fileInput = document.getElementById("fileInput");
@@ -8,24 +10,32 @@ const taskDescription = document.getElementById("taskDescription");
 const addTaskButton = document.getElementById("addTask");
 const searchInput = document.getElementById("searchInput");
 const taskList = document.getElementById("taskList");
+const paginationContainer = document.getElementById("pagination");
 
 // Event Listeners
 fileInput.addEventListener("change", loadTasksFromFile);
 saveToFileButton.addEventListener("click", saveTasksToFile);
 addTaskButton.addEventListener("click", addTask);
-searchInput.addEventListener("input", renderTasks);
+searchInput.addEventListener("input", () => {
+	currentPage = 1;
+	renderTasks();
+});
+taskTitle.addEventListener("keydown", function (e) {
+	if (e.key === "Enter") {
+		addTask();
+	}
+});
 
-// Add a task (called by both button click and Enter key)
+// Add a task
 function addTask() {
 	if (taskTitle.value) {
-		const currentDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
-		tasks.push({
+		const currentDate = new Date().toISOString().split("T")[0];
+		tasks.unshift({
 			title: taskTitle.value,
 			description: taskDescription.value,
 			date: currentDate,
 			completed: false,
 		});
-		tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
 		renderTasks();
 		clearInputs();
 	} else {
@@ -33,34 +43,43 @@ function addTask() {
 	}
 }
 
-// Render tasks
+// Render tasks with pagination
 function renderTasks() {
 	const searchTerm = searchInput.value.toLowerCase();
 	taskList.innerHTML = "";
 
-	tasks
-		.filter(
-			(task) =>
-				task.title.toLowerCase().includes(searchTerm) ||
-				task.description.toLowerCase().includes(searchTerm),
-		)
-		.forEach((task, index) => {
-			const taskElement = document.createElement("div");
-			taskElement.className = `task ${task.completed ? "completed" : ""}`;
-			taskElement.innerHTML = `
-        <h3 id="title-${index}" class="task-title">${task.title}</h3>
-        <p id="description-${index}" class="task-description">${
-				task.description
-			}</p>
-        <p><strong>Date:</strong> ${task.date}</p>
-        <button onclick="toggleTask(${index})">${
-				task.completed ? "Incomplete" : "Complete"
-			}</button>
-        <button onclick="editTask(${index})">Edit</button>
-        <button onclick="confirmDelete(${index})">Delete</button>
-      `;
-			taskList.appendChild(taskElement);
-		});
+	// Filter tasks based on search
+	const filteredTasks = tasks.filter(
+		(task) =>
+			task.title.toLowerCase().includes(searchTerm) ||
+			task.description.toLowerCase().includes(searchTerm),
+	);
+
+	// Calculate tasks to display for the current page
+	const startIndex = (currentPage - 1) * tasksPerPage;
+	const endIndex = startIndex + tasksPerPage;
+	const tasksToDisplay = filteredTasks.slice(startIndex, endIndex);
+
+	// Display tasks
+	tasksToDisplay.forEach((task, index) => {
+		const taskElement = document.createElement("div");
+		taskElement.className = `task ${task.completed ? "completed" : ""}`;
+		taskElement.innerHTML = `
+      <h3 id="title-${index}" class="task-title">${task.title}</h3>
+      <p id="description-${index}" class="task-description">${
+			task.description
+		}</p>
+      <p><strong>Date:</strong> ${task.date}</p>
+      <button onclick="toggleTask(${index})">${
+			task.completed ? "Incomplete" : "Complete"
+		}</button>
+      <button onclick="editTask(${index})">Edit</button>
+      <button onclick="confirmDelete(${index})">Delete</button>
+    `;
+		taskList.appendChild(taskElement);
+	});
+
+	renderPagination(filteredTasks.length);
 }
 
 // Clear input fields
@@ -71,58 +90,52 @@ function clearInputs() {
 
 // Toggle task completion
 function toggleTask(index) {
-	tasks[index].completed = !tasks[index].completed;
+	const actualIndex = (currentPage - 1) * tasksPerPage + index;
+	tasks[actualIndex].completed = !tasks[actualIndex].completed;
 	renderTasks();
 }
 
 // Edit task
 function editTask(index) {
+	const actualIndex = (currentPage - 1) * tasksPerPage + index;
+	const task = tasks[actualIndex];
 	const titleElement = document.getElementById(`title-${index}`);
 	const descriptionElement = document.getElementById(`description-${index}`);
 
-	// If already in editing mode, save the changes
 	if (titleElement.hasAttribute("contenteditable")) {
-		tasks[index].title = titleElement.innerText;
-		tasks[index].description = descriptionElement.innerText;
+		task.title = titleElement.innerText;
+		task.description = descriptionElement.innerText;
 
-		// Disable editing mode and remove background color
 		titleElement.removeAttribute("contenteditable");
 		descriptionElement.removeAttribute("contenteditable");
 		titleElement.classList.remove("editable-field");
 		descriptionElement.classList.remove("editable-field");
 
-		// Change button back to "Edit"
 		const editButton = titleElement
 			.closest(".task")
 			.querySelector("button:nth-child(2)");
 		editButton.textContent = "Edit";
 	} else {
-		// Enable editing mode and add background color
 		titleElement.setAttribute("contenteditable", "true");
 		descriptionElement.setAttribute("contenteditable", "true");
 		titleElement.classList.add("editable-field");
 		descriptionElement.classList.add("editable-field");
 
-		// Change button to "Save"
 		const editButton = titleElement
 			.closest(".task")
 			.querySelector("button:nth-child(2)");
 		editButton.textContent = "Save";
 
-		// Focus and select the text inside the task title and description
 		titleElement.focus();
-		document.execCommand("selectAll", false, null);
 	}
 	renderTasks();
 }
 
-// Delete a task with confirmation
+// Delete task with confirmation
 function confirmDelete(index) {
-	const confirmDelete = window.confirm(
-		"Are you sure you want to delete this task?",
-	);
-	if (confirmDelete) {
-		deleteTask(index);
+	const actualIndex = (currentPage - 1) * tasksPerPage + index;
+	if (window.confirm("Are you sure you want to delete this task?")) {
+		deleteTask(actualIndex);
 	}
 }
 
@@ -150,21 +163,75 @@ function loadTasksFromFile(event) {
 		const reader = new FileReader();
 		reader.onload = function (e) {
 			tasks = JSON.parse(e.target.result);
-			tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
 			renderTasks();
 		};
 		reader.readAsText(file);
 	}
 }
 
-// Handle pressing Enter to add a task
-taskTitle.addEventListener("keydown", function (e) {
-	if (e.key === "Enter") {
-		addTask();
-	}
-});
+// Render pagination
+// Render pagination with a limit on visible page numbers
+function renderPagination(totalTasks) {
+	paginationContainer.innerHTML = "";
+	const totalPages = Math.ceil(totalTasks / tasksPerPage);
+	const visiblePages = 5; // количество видимых страниц
 
-// Display alert before the user leaves the page
+	let startPage = currentPage - Math.floor(visiblePages / 2);
+	let endPage = currentPage + Math.floor(visiblePages / 2);
+
+	// Обрезаем диапазон, чтобы страницы не выходили за пределы
+	if (startPage < 1) {
+		startPage = 1;
+		endPage = Math.min(visiblePages, totalPages);
+	}
+
+	if (endPage > totalPages) {
+		endPage = totalPages;
+		startPage = Math.max(1, totalPages - visiblePages + 1);
+	}
+
+	for (let i = startPage; i <= endPage; i++) {
+		const pageButton = document.createElement("button");
+		pageButton.textContent = i;
+		pageButton.className = i === currentPage ? "active" : "";
+		pageButton.addEventListener("click", () => {
+			currentPage = i;
+			renderTasks();
+		});
+		paginationContainer.appendChild(pageButton);
+	}
+
+	// Добавляем кнопки для перехода к первой и последней странице, если нужно
+	if (startPage > 1) {
+		const firstPageButton = document.createElement("button");
+		firstPageButton.textContent = "1";
+		firstPageButton.addEventListener("click", () => {
+			currentPage = 1;
+			renderTasks();
+		});
+		paginationContainer.prepend(firstPageButton);
+
+		const ellipsisLeft = document.createElement("span");
+		ellipsisLeft.textContent = "...";
+		paginationContainer.prepend(ellipsisLeft);
+	}
+
+	if (endPage < totalPages) {
+		const ellipsisRight = document.createElement("span");
+		ellipsisRight.textContent = "...";
+		paginationContainer.appendChild(ellipsisRight);
+
+		const lastPageButton = document.createElement("button");
+		lastPageButton.textContent = totalPages;
+		lastPageButton.addEventListener("click", () => {
+			currentPage = totalPages;
+			renderTasks();
+		});
+		paginationContainer.appendChild(lastPageButton);
+	}
+}
+
+// Warn before leaving the page
 window.addEventListener("beforeunload", function (event) {
 	if (tasks.length > 0) {
 		const message = "You have unsaved tasks. Do you want to save them?";

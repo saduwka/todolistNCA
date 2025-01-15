@@ -95,6 +95,52 @@ button:hover {
 	padding: 5px;
 }
 
+.pagination {
+	display: flex;
+	justify-content: center;
+	margin-top: 20px;
+	gap: 8px;
+}
+  
+.pagination button {
+	background-color: #007bff;
+	color: white;
+	border: 1px solid #0056b3;
+	padding: 8px 12px;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: background-color 0.3s ease, transform 0.2s ease;
+	width: auto; /* Убираем растягивание на всю ширину */
+	min-width: 60px; /* Задаем минимальную ширину кнопок */
+	text-align: center;
+}
+  
+.pagination button.active {
+	background-color: #0056b3;
+	color: #ffffff;
+	font-weight: bold;
+	transform: scale(1.1);
+	cursor: default;
+}
+  
+.pagination button:hover:not(.active) {
+	background-color: #0056b3;
+	transform: scale(1.05);
+}
+  
+.pagination button:disabled {
+	background-color: #cccccc;
+	color: #666666;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.footer-text {
+	display: flex;
+	justify-content: center;
+	
+}
 @media (max-width: 480px) {
 	body {
 		font-size: 12px;
