@@ -25,8 +25,33 @@
 				</div>
 				<input type="text" id="searchInput" placeholder="Search tasks..." />
 			</div>
+			<div class="taskarea">
+				<div id="taskTabs">
+					<button
+						id="incompleteTab"
+						class="tab active"
+						onclick="switchTab('incomplete')"
+					>
+						Incomplete
+					</button>
+					<button
+						id="completedTab"
+						class="tab"
+						onclick="switchTab('completed')"
+					>
+						Completed
+					</button>
+				</div>
 
-			<div id="taskList"></div>
+				<div id="taskList">
+					<div id="incompleteTasks" class="task-container"></div>
+					<div
+						id="completedTasks"
+						class="task-container"
+						style="display: none"
+					></div>
+				</div>
+			</div>
 		</div>
 		<div class="pagination" id="pagination"></div>
 		<div class="footer-text">With love, SADuwka</div>

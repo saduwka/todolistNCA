@@ -1,8 +1,8 @@
 let tasks = [];
 const tasksPerPage = 5;
 let currentPage = 1;
+let activeTab = "incomplete";
 
-// DOM Elements
 const fileInput = document.getElementById("fileInput");
 const saveToFileButton = document.getElementById("saveToFile");
 const taskTitle = document.getElementById("taskTitle");
@@ -11,8 +11,8 @@ const addTaskButton = document.getElementById("addTask");
 const searchInput = document.getElementById("searchInput");
 const taskList = document.getElementById("taskList");
 const paginationContainer = document.getElementById("pagination");
+const taskTabsBtn = document.querySelector("#taskTabs");
 
-// Event Listeners
 fileInput.addEventListener("change", loadTasksFromFile);
 saveToFileButton.addEventListener("click", saveTasksToFile);
 addTaskButton.addEventListener("click", addTask);
@@ -27,19 +27,19 @@ taskTitle.addEventListener("keydown", function (e) {
 });
 
 document.getElementById("upload-file").addEventListener("click", function () {
-	document.getElementById("fileInput").click(); // Кликаем на скрытое поле input
+	document.getElementById("fileInput").click();
 });
 
 document
 	.getElementById("fileInput")
 	.addEventListener("change", function (event) {
+		taskTabsBtn.style.display = "flex";
 		taskList.style.display = "flex";
 		const fileName = event.target.files[0]
 			? event.target.files[0].name
 			: "No file chosen";
 	});
 
-// Add a task
 function addTask() {
 	if (taskTitle.value) {
 		const currentDate = new Date().toISOString().split("T")[0];
@@ -56,66 +56,113 @@ function addTask() {
 	}
 }
 
-// Render tasks with pagination
+function switchTab(tab) {
+	const incompleteTab = document.getElementById("incompleteTab");
+	const completedTab = document.getElementById("completedTab");
+	const incompleteTasks = document.getElementById("incompleteTasks");
+	const completedTasks = document.getElementById("completedTasks");
+
+	// Переключаем вкладки
+	if (tab === "incomplete") {
+		activeTab = "incomplete"; // Обновляем активную вкладку
+		incompleteTab.classList.add("active");
+		completedTab.classList.remove("active");
+		incompleteTasks.style.display = "block";
+		completedTasks.style.display = "none";
+	} else if (tab === "completed") {
+		activeTab = "completed"; // Обновляем активную вкладку
+		completedTab.classList.add("active");
+		incompleteTab.classList.remove("active");
+		completedTasks.style.display = "block";
+		incompleteTasks.style.display = "none";
+	}
+	currentPage = 1; // Сбрасываем страницу на первую
+	renderTasks(); // Перерисовываем задачи
+}
+
 function renderTasks() {
 	const searchTerm = searchInput.value.toLowerCase();
-	taskList.innerHTML = "";
+	const incompleteTasksContainer = document.getElementById("incompleteTasks");
+	const completedTasksContainer = document.getElementById("completedTasks");
 
-	// Filter tasks based on search
+	// Очищаем контейнеры
+	incompleteTasksContainer.innerHTML = "";
+	completedTasksContainer.innerHTML = "";
+
+	// Фильтруем задачи по поисковому запросу
 	const filteredTasks = tasks.filter(
 		(task) =>
 			task.title.toLowerCase().includes(searchTerm) ||
 			task.description.toLowerCase().includes(searchTerm),
 	);
 
-	// Calculate tasks to display for the current page
+	// Определяем активную вкладку и разделяем задачи
+	const activeTabTasks =
+		activeTab === "incomplete"
+			? filteredTasks.filter((task) => !task.completed)
+			: filteredTasks.filter((task) => task.completed);
+
+	// Определяем индексы задач для текущей страницы
 	const startIndex = (currentPage - 1) * tasksPerPage;
 	const endIndex = startIndex + tasksPerPage;
-	const tasksToDisplay = filteredTasks.slice(startIndex, endIndex);
+	const tasksToDisplay = activeTabTasks.slice(startIndex, endIndex);
 
-	// Display tasks
+	// Отображаем задачи
 	tasksToDisplay.forEach((task, index) => {
+		const globalIndex = tasks.indexOf(task); // Получаем глобальный индекс
 		const taskElement = document.createElement("div");
 		taskElement.className = `task ${task.completed ? "completed" : ""}`;
 		taskElement.innerHTML = `
-      <h3 id="title-${index}" class="task-title">${task.title}</h3>
-      <p id="description-${index}" class="task-description">${
-			task.description
-		}</p>
+      <h3 class="task-title">${task.title}</h3>
+      <p class="task-description">${task.description}</p>
       <p><strong>Date:</strong> ${task.date}</p>
-      <button id="complete-btn" onclick="toggleTask(${index})">${
+      <button onclick="toggleTask(${globalIndex})">${
 			task.completed ? "Incomplete" : "Complete"
 		}</button>
-      <button id="edit-btn" onclick="editTask(${index})">Edit</button>
-      <button id="delete-btn" onclick="confirmDelete(${index})">Delete</button>
+      <button onclick="editTask(${globalIndex})">Edit</button>
+      <button onclick="confirmDelete(${globalIndex})">Delete</button>
     `;
-		taskList.appendChild(taskElement);
+		// Размещаем задачу в соответствующем контейнере
+		if (task.completed) {
+			completedTasksContainer.appendChild(taskElement);
+		} else {
+			incompleteTasksContainer.appendChild(taskElement);
+		}
 	});
 
-	renderPagination(filteredTasks.length);
+	// Отрисовка пагинации
+	renderPagination(activeTabTasks.length);
 }
 
-// Clear input fields
 function clearInputs() {
 	taskTitle.value = "";
 	taskDescription.value = "";
 }
 
-// Toggle task completion
-function toggleTask(index) {
-	const actualIndex = (currentPage - 1) * tasksPerPage + index;
-	tasks[actualIndex].completed = !tasks[actualIndex].completed;
+function toggleTask(globalIndex) {
+	tasks[globalIndex].completed = !tasks[globalIndex].completed;
+	currentPage = 1;
 	renderTasks();
 }
 
-// Edit task
-function editTask(index) {
-	const actualIndex = (currentPage - 1) * tasksPerPage + index;
-	const task = tasks[actualIndex];
-	const titleElement = document.getElementById(`title-${index}`);
-	const descriptionElement = document.getElementById(`description-${index}`);
+function editTask(globalIndex) {
+	const task = tasks[globalIndex];
+
+	// Проверяем, если элементы уже редактируемы
+	const taskElement = document.querySelector(
+		`.task:nth-child(${globalIndex + 1})`,
+	);
+
+	if (!taskElement) {
+		console.error("Task element not found.");
+		return;
+	}
+
+	const titleElement = taskElement.querySelector(".task-title");
+	const descriptionElement = taskElement.querySelector(".task-description");
 
 	if (titleElement.hasAttribute("contenteditable")) {
+		// Завершаем редактирование
 		task.title = titleElement.innerText;
 		task.description = descriptionElement.innerText;
 
@@ -124,41 +171,33 @@ function editTask(index) {
 		titleElement.classList.remove("editable-field");
 		descriptionElement.classList.remove("editable-field");
 
-		const editButton = titleElement
-			.closest(".task")
-			.querySelector("button:nth-child(2)");
+		const editButton = taskElement.querySelector("button:nth-child(2)");
 		editButton.textContent = "Edit";
 	} else {
+		// Начинаем редактирование
 		titleElement.setAttribute("contenteditable", "true");
 		descriptionElement.setAttribute("contenteditable", "true");
 		titleElement.classList.add("editable-field");
 		descriptionElement.classList.add("editable-field");
 
-		const editButton = titleElement
-			.closest(".task")
-			.querySelector("button:nth-child(2)");
+		const editButton = taskElement.querySelector("button:nth-child(2)");
 		editButton.textContent = "Save";
 
 		titleElement.focus();
 	}
-	renderTasks();
 }
 
-// Delete task with confirmation
-function confirmDelete(index) {
-	const actualIndex = (currentPage - 1) * tasksPerPage + index;
+function confirmDelete(globalIndex) {
 	if (window.confirm("Are you sure you want to delete this task?")) {
-		deleteTask(actualIndex);
+		deleteTask(globalIndex);
 	}
 }
 
-// Delete a task
-function deleteTask(index) {
-	tasks.splice(index, 1);
+function deleteTask(globalIndex) {
+	tasks.splice(globalIndex, 1);
 	renderTasks();
 }
 
-// Save tasks to file
 function saveTasksToFile() {
 	const blob = new Blob([JSON.stringify(tasks, null, 2)], {
 		type: "text/plain",
@@ -169,7 +208,6 @@ function saveTasksToFile() {
 	link.click();
 }
 
-// Load tasks from file
 function loadTasksFromFile(event) {
 	const file = event.target.files[0];
 	if (file) {
@@ -182,27 +220,28 @@ function loadTasksFromFile(event) {
 	}
 }
 
-// Render pagination
-// Render pagination with a limit on visible page numbers
 function renderPagination(totalTasks) {
 	paginationContainer.innerHTML = "";
 	const totalPages = Math.ceil(totalTasks / tasksPerPage);
-	const visiblePages = 5; // количество видимых страниц
 
+	// Если всего задач 0, не показываем пагинацию
+	if (totalPages <= 1) return;
+
+	const visiblePages = 5; // количество видимых страниц
 	let startPage = currentPage - Math.floor(visiblePages / 2);
 	let endPage = currentPage + Math.floor(visiblePages / 2);
 
-	// Обрезаем диапазон, чтобы страницы не выходили за пределы
+	// Ограничиваем диапазон
 	if (startPage < 1) {
 		startPage = 1;
 		endPage = Math.min(visiblePages, totalPages);
 	}
-
 	if (endPage > totalPages) {
 		endPage = totalPages;
 		startPage = Math.max(1, totalPages - visiblePages + 1);
 	}
 
+	// Кнопки страниц
 	for (let i = startPage; i <= endPage; i++) {
 		const pageButton = document.createElement("button");
 		pageButton.textContent = i;
@@ -214,7 +253,7 @@ function renderPagination(totalTasks) {
 		paginationContainer.appendChild(pageButton);
 	}
 
-	// Добавляем кнопки для перехода к первой и последней странице, если нужно
+	// Кнопки перехода на первую и последнюю страницу
 	if (startPage > 1) {
 		const firstPageButton = document.createElement("button");
 		firstPageButton.textContent = "1";
@@ -244,7 +283,6 @@ function renderPagination(totalTasks) {
 	}
 }
 
-// Warn before leaving the page
 window.addEventListener("beforeunload", function (event) {
 	if (tasks.length > 0) {
 		const message = "You have unsaved tasks. Do you want to save them?";
@@ -252,6 +290,3 @@ window.addEventListener("beforeunload", function (event) {
 		return message;
 	}
 });
-
-// Initial render
-renderTasks();
