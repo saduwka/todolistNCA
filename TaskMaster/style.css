@@ -3,18 +3,24 @@ body {
 	margin: 0;
 	padding: 0;
 	background-color: #f4f4f9;
+	background: linear-gradient(to bottom, #005b74, #00478d, #005b74);
 }
 
 .container {
-	max-width: 1000px;
+	display: flex;
+}
+
+.header {
+	max-height: 350px;
+	min-width: 500px;
 	margin: 50px auto;
 	background: #fff;
 	padding: 20px;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-	border-radius: 8px;
+	border-radius: 15px;
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
+	justify-content: flex-start;
 	align-items: center;
 }
 
@@ -23,13 +29,21 @@ h1 {
 	color: #333;
 }
 
-.input-area {
-	display: flex;
-	gap: 10px;
-	width: 100%;
+.input-file-label {
+	text-align: center;
+	background-color: #007bff;
+	color: #fff;
+	border: none;
+	cursor: pointer;
 }
 
 #fileInput {
+	display: none;
+}
+
+.input-area {
+	display: flex;
+	gap: 10px;
 	width: 100%;
 }
 
@@ -55,8 +69,15 @@ button:hover {
 }
 
 #taskList {
-	margin-top: 20px;
-	width: 100%;
+	max-width: 1200px;
+	min-width: 1200px;
+	margin: 50px auto;
+	background: #fff;
+	padding: 20px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	border-radius: 15px;
+	display: none;
+	flex-direction: column;
 }
 
 .task-input {
@@ -95,13 +116,25 @@ button:hover {
 	padding: 5px;
 }
 
+#complete-btn {
+	background-color: #28a745;
+}
+
+#delete-btn {
+	background-color: #dc3545;
+}
+
+#edit-btn {
+	background-color: #007bff;
+}
+
 .pagination {
 	display: flex;
 	justify-content: center;
 	margin-top: 20px;
 	gap: 8px;
 }
-  
+
 .pagination button {
 	background-color: #007bff;
 	color: white;
@@ -115,7 +148,7 @@ button:hover {
 	min-width: 60px; /* Задаем минимальную ширину кнопок */
 	text-align: center;
 }
-  
+
 .pagination button.active {
 	background-color: #0056b3;
 	color: #ffffff;
@@ -123,12 +156,12 @@ button:hover {
 	transform: scale(1.1);
 	cursor: default;
 }
-  
+
 .pagination button:hover:not(.active) {
 	background-color: #0056b3;
 	transform: scale(1.05);
 }
-  
+
 .pagination button:disabled {
 	background-color: #cccccc;
 	color: #666666;
@@ -139,11 +172,17 @@ button:hover {
 .footer-text {
 	display: flex;
 	justify-content: center;
-	
+	margin: 20px;
+	color: #9b9b9b;
 }
-@media (max-width: 480px) {
+@media (max-width: 1000px) {
 	body {
-		font-size: 12px;
+		font-size: 14px;
+	}
+
+	.container {
+		display: flex;
+		flex-direction: column;
 	}
 
 	h1 {
@@ -156,16 +195,13 @@ button:hover {
 	}
 
 	#taskList {
-		padding: 0;
+		padding: 10px;
+		max-width: 800px;
+		min-width: 800px;
 	}
 
 	.task {
 		padding: 8px;
-	}
-
-	button {
-		font-size: 0.7rem;
-		padding: 5px 10px;
 	}
 
 	label {

@@ -8,21 +8,23 @@
 	</head>
 	<body>
 		<div class="container">
-			<h1>Task Manager</h1>
-			<div class="input-area">
-				<input type="file" id="fileInput" accept=".txt" />
-				<button id="saveToFile">Save to File</button>
+			<div class="header">
+				<h1>Task Manager</h1>
+				<div class="input-area">
+					<button id="upload-file">Upload File</button>
+					<input type="file" id="fileInput" accept=".txt" />
+					<button id="saveToFile">Save to File</button>
+				</div>
+				<div class="task-input">
+					<input type="text" id="taskTitle" placeholder="Task title" required />
+					<textarea
+						id="taskDescription"
+						placeholder="Task description"
+					></textarea>
+					<button id="addTask">Add Task</button>
+				</div>
+				<input type="text" id="searchInput" placeholder="Search tasks..." />
 			</div>
-			<div class="task-input">
-				<input type="text" id="taskTitle" placeholder="Task title" required />
-				<textarea
-					id="taskDescription"
-					placeholder="Task description"
-				></textarea>
-				<button id="addTask">Add Task</button>
-			</div>
-
-			<input type="text" id="searchInput" placeholder="Search tasks..." />
 
 			<div id="taskList"></div>
 		</div>

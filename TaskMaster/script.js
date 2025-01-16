@@ -26,6 +26,19 @@ taskTitle.addEventListener("keydown", function (e) {
 	}
 });
 
+document.getElementById("upload-file").addEventListener("click", function () {
+	document.getElementById("fileInput").click(); // Кликаем на скрытое поле input
+});
+
+document
+	.getElementById("fileInput")
+	.addEventListener("change", function (event) {
+		taskList.style.display = "flex";
+		const fileName = event.target.files[0]
+			? event.target.files[0].name
+			: "No file chosen";
+	});
+
 // Add a task
 function addTask() {
 	if (taskTitle.value) {
@@ -70,11 +83,11 @@ function renderTasks() {
 			task.description
 		}</p>
       <p><strong>Date:</strong> ${task.date}</p>
-      <button onclick="toggleTask(${index})">${
+      <button id="complete-btn" onclick="toggleTask(${index})">${
 			task.completed ? "Incomplete" : "Complete"
 		}</button>
-      <button onclick="editTask(${index})">Edit</button>
-      <button onclick="confirmDelete(${index})">Delete</button>
+      <button id="edit-btn" onclick="editTask(${index})">Edit</button>
+      <button id="delete-btn" onclick="confirmDelete(${index})">Delete</button>
     `;
 		taskList.appendChild(taskElement);
 	});
