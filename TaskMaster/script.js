@@ -108,10 +108,12 @@ function renderTasks() {
 	const tasksToDisplay = activeTabTasks.slice(startIndex, endIndex);
 
 	// Отображаем задачи
-	tasksToDisplay.forEach((task, index) => {
-		const globalIndex = tasks.indexOf(task); // Получаем глобальный индекс
+	tasksToDisplay.forEach((task) => {
+		const globalIndex = tasks.indexOf(task); // Находим глобальный индекс задачи
 		const taskElement = document.createElement("div");
 		taskElement.className = `task ${task.completed ? "completed" : ""}`;
+		taskElement.setAttribute("data-index", globalIndex); // Храним глобальный индекс в атрибуте
+
 		taskElement.innerHTML = `
       <h3 class="task-title">${task.title}</h3>
       <p class="task-description">${task.description}</p>
@@ -122,7 +124,7 @@ function renderTasks() {
       <button onclick="editTask(${globalIndex})">Edit</button>
       <button onclick="confirmDelete(${globalIndex})">Delete</button>
     `;
-		// Размещаем задачу в соответствующем контейнере
+
 		if (task.completed) {
 			completedTasksContainer.appendChild(taskElement);
 		} else {
@@ -130,8 +132,7 @@ function renderTasks() {
 		}
 	});
 
-	// Отрисовка пагинации
-	renderPagination(activeTabTasks.length);
+	renderPagination(activeTabTasks.length); // Пагинация для активной вкладки
 }
 
 function clearInputs() {
@@ -145,24 +146,19 @@ function toggleTask(globalIndex) {
 	renderTasks();
 }
 
-function editTask(globalIndex) {
-	const task = tasks[globalIndex];
+function editTask(index) {
+	// Находим задачу и соответствующий DOM-элемент
+	const task = tasks[index];
+	const taskElement = document.querySelector(`.task[data-index="${index}"]`);
 
-	// Проверяем, если элементы уже редактируемы
-	const taskElement = document.querySelector(
-		`.task:nth-child(${globalIndex + 1})`,
-	);
-
-	if (!taskElement) {
-		console.error("Task element not found.");
-		return;
-	}
+	if (!taskElement) return; // Если элемент не найден (на всякий случай)
 
 	const titleElement = taskElement.querySelector(".task-title");
 	const descriptionElement = taskElement.querySelector(".task-description");
+	const editButton = taskElement.querySelector("button:nth-child(2)");
 
 	if (titleElement.hasAttribute("contenteditable")) {
-		// Завершаем редактирование
+		// Сохранение изменений
 		task.title = titleElement.innerText;
 		task.description = descriptionElement.innerText;
 
@@ -171,16 +167,14 @@ function editTask(globalIndex) {
 		titleElement.classList.remove("editable-field");
 		descriptionElement.classList.remove("editable-field");
 
-		const editButton = taskElement.querySelector("button:nth-child(2)");
 		editButton.textContent = "Edit";
 	} else {
-		// Начинаем редактирование
+		// Режим редактирования
 		titleElement.setAttribute("contenteditable", "true");
 		descriptionElement.setAttribute("contenteditable", "true");
 		titleElement.classList.add("editable-field");
 		descriptionElement.classList.add("editable-field");
 
-		const editButton = taskElement.querySelector("button:nth-child(2)");
 		editButton.textContent = "Save";
 
 		titleElement.focus();
