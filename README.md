@@ -12,11 +12,12 @@ This is a task management application built with React and Node.js. The app allo
 
 ## Installation Steps
 
+```bash
 Step 1: Clone the repository
 
 Clone the repository to your local machine using Git:
 
-```bash
+
 git clone https://github.com/saduwka/todolistNCA.git
 
 Step 2: Navigate to the project directory
