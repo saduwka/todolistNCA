@@ -7,7 +7,6 @@ import TaskSearch from "../TaskSearch/TaskSearch";
 import { motion } from "framer-motion";
 
 const API_URL = "http://192.168.2.158:5000";
-const TASKS_PER_PAGE = 5;
 
 export default function TaskApp() {
   const [tasks, setTasks] = useState([]);
@@ -16,7 +15,6 @@ export default function TaskApp() {
   const [activeTab, setActiveTab] = useState("active");
   const [editingTask, setEditingTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [visibleTasksCount, setVisibleTasksCount] = useState(TASKS_PER_PAGE);
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchTasks = useCallback(async () => {
@@ -26,9 +24,14 @@ export default function TaskApp() {
       const res = await fetch(`${API_URL}/tasks`);
       if (!res.ok) throw new Error("Ошибка загрузки данных");
       const data = await res.json();
-      if (!Array.isArray(data.tasks)) throw new Error("Неверный формат данных");
 
-      setTasks(data.tasks);
+      if (Array.isArray(data)) {
+        setTasks(data);
+      } else if (Array.isArray(data.tasks)) {
+        setTasks(data.tasks);
+      } else {
+        throw new Error("Неверный формат данных");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -40,13 +43,15 @@ export default function TaskApp() {
     fetchTasks();
   }, [fetchTasks]);
 
-  useEffect(() => {
-    setVisibleTasksCount(TASKS_PER_PAGE); // Сбросим количество видимых задач при смене вкладки
-  }, [activeTab]);
-
-  const handleShowMore = () => {
-    setVisibleTasksCount((prev) => prev + TASKS_PER_PAGE); // Увеличиваем количество отображаемых задач
-  };
+  // Мемоизация filteredTasks без учета невидимости
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const isStatusMatch =
+        activeTab === "active" ? !task.completed : task.completed;
+      const isSearchMatch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return isStatusMatch && isSearchMatch;
+    });
+  }, [tasks, activeTab, searchQuery]);
 
   const handleTaskAction = async (url, method, body = null) => {
     try {
@@ -78,13 +83,9 @@ export default function TaskApp() {
   const toggleTask = (id) => handleTaskAction(`${API_URL}/tasks/${id}/toggle`, "PATCH");
   const deleteTask = (id) => window.confirm("Удалить задачу?") && handleTaskAction(`${API_URL}/tasks/${id}`, "DELETE");
 
-  const filteredTasks = useMemo(() => {
-    return tasks
-      .filter((task) => (activeTab === "active" ? !task.completed : task.completed))
-      .filter((task) => task.title.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [tasks, activeTab, searchQuery]);
-
-  const visibleTasks = filteredTasks.slice(0, visibleTasksCount); // Отображаем только количество задач, которое разрешено
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
 
   return (
     <div className={styles.container}>
@@ -111,14 +112,12 @@ export default function TaskApp() {
 
       {loading && <p className={styles.loading}>Загрузка...</p>}
 
-      <TaskList tasks={visibleTasks} onEdit={(task) => { setEditingTask(task); setIsModalOpen(true); }} onToggle={toggleTask} onDelete={deleteTask} />
-
-      {/* Кнопка Show More */}
-      {filteredTasks.length > visibleTasksCount && (
-        <button className={styles.showMoreButton} onClick={handleShowMore} disabled={loading}>
-          {loading ? "Loading..." : "Show More"}
-        </button>
-      )}
+      <TaskList
+        tasks={filteredTasks}
+        onEdit={(task) => { setEditingTask(task); setIsModalOpen(true); }}
+        onToggle={toggleTask}
+        onDelete={deleteTask}
+      />
 
       <TaskModal isOpen={isModalOpen} task={editingTask} onClose={() => setIsModalOpen(false)} onSave={updateTask} />
     </div>

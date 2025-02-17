@@ -1,8 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs").promises;
+const http = require("http");  // Для работы с сервером WebSocket
+const WebSocket = require("ws");  // Для работы с WebSocket
 
 const app = express();
+const server = http.createServer(app);  // Используем http сервер для WebSocket
 const PORT = 5000;
 const TASKS_FILE = "tasks.json";
 
@@ -26,19 +29,25 @@ const writeTasks = async (tasks) => {
   await fs.writeFile(TASKS_FILE, JSON.stringify(tasks, null, 2));
 };
 
+// Создаем WebSocket сервер
+const wss = new WebSocket.Server({ server });
+
+wss.on("connection", (ws) => {
+  console.log("New WebSocket connection");
+
+  // Обработка сообщений от клиента
+  ws.on("message", (message) => {
+    console.log(`Received message: ${message}`);
+  });
+
+  // Отправка сообщения клиенту
+  ws.send("Welcome to the WebSocket server!");
+});
+
 // Получить все задачи с пагинацией
 app.get("/tasks", async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 5;
-  const offset = (page - 1) * limit;
-
   const tasks = await readTasks();
-  const paginatedTasks = tasks.slice(offset, offset + limit);
-
-  res.json({
-    tasks: paginatedTasks,
-    totalPages: Math.ceil(tasks.length / limit),
-  });
+  res.json(tasks);  // Просто отправляем все задачи
 });
 
 // Добавить новую задачу
@@ -48,6 +57,13 @@ app.post("/tasks", async (req, res) => {
   tasks.unshift(newTask);
   await writeTasks(tasks);
   res.json(newTask);
+
+  // Отправляем уведомление через WebSocket, если нужно
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send("A new task has been added.");
+    }
+  });
 });
 
 // Обновить задачу (PATCH - частичное обновление)
@@ -66,8 +82,14 @@ app.patch("/tasks/:id/toggle", async (req, res) => {
 
   await writeTasks(tasks);
   res.json(task);
-});
 
+  // Отправляем уведомление через WebSocket, если нужно
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(`Task ${id} status has been updated.`);
+    }
+  });
+});
 
 // Удалить задачу
 app.delete("/tasks/:id", async (req, res) => {
@@ -80,9 +102,16 @@ app.delete("/tasks/:id", async (req, res) => {
 
   await writeTasks(newTasks);
   res.json({ success: true });
+
+  // Отправляем уведомление через WebSocket, если нужно
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(`Task ${req.params.id} has been deleted.`);
+    }
+  });
 });
 
 // Запуск сервера
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
 });
