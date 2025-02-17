@@ -16,6 +16,7 @@ export default function TaskApp() {
   const [editingTask, setEditingTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleTasksCount, setVisibleTasksCount] = useState(5); // Начинаем с 5 задач
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -43,7 +44,6 @@ export default function TaskApp() {
     fetchTasks();
   }, [fetchTasks]);
 
-  // Мемоизация filteredTasks без учета невидимости
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
       const isStatusMatch =
@@ -52,6 +52,12 @@ export default function TaskApp() {
       return isStatusMatch && isSearchMatch;
     });
   }, [tasks, activeTab, searchQuery]);
+
+  const visibleTasks = filteredTasks.slice(0, visibleTasksCount); // Ограничиваем количество видимых задач
+
+  const loadMoreTasks = () => {
+    setVisibleTasksCount((prevCount) => prevCount + 5); // Увеличиваем на 5
+  };
 
   const handleTaskAction = async (url, method, body = null) => {
     try {
@@ -113,11 +119,19 @@ export default function TaskApp() {
       {loading && <p className={styles.loading}>Загрузка...</p>}
 
       <TaskList
-        tasks={filteredTasks}
+        tasks={visibleTasks} // Передаем только видимые задачи
         onEdit={(task) => { setEditingTask(task); setIsModalOpen(true); }}
         onToggle={toggleTask}
         onDelete={deleteTask}
       />
+
+      <button 
+        className={styles.showMoreButton} 
+        onClick={loadMoreTasks}
+        disabled={visibleTasksCount >= filteredTasks.length}
+      >
+        Show More
+      </button>
 
       <TaskModal isOpen={isModalOpen} task={editingTask} onClose={() => setIsModalOpen(false)} onSave={updateTask} />
     </div>
