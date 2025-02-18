@@ -1,14 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs").promises;
-const http = require("http");  // Для работы с сервером WebSocket
-const WebSocket = require("ws");  // Для работы с WebSocket
+const WebSocket = require("ws");
 
-const app = express();
-const server = http.createServer(app);  // Используем http сервер для WebSocket
 const PORT = 5000;
 const TASKS_FILE = "tasks.json";
 
+const app = express();
 app.use(cors());
 app.use(express.json());
 
@@ -29,20 +27,12 @@ const writeTasks = async (tasks) => {
   await fs.writeFile(TASKS_FILE, JSON.stringify(tasks, null, 2));
 };
 
-// Создаем WebSocket сервер
-const wss = new WebSocket.Server({ server });
-
-wss.on("connection", (ws) => {
-  console.log("New WebSocket connection");
-
-  // Обработка сообщений от клиента
-  ws.on("message", (message) => {
-    console.log(`Received message: ${message}`);
-  });
-
-  // Отправка сообщения клиенту
-  ws.send("Welcome to the WebSocket server!");
+// Создаем HTTP сервер и WebSocket сервер
+const server = app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+const wss = new WebSocket.Server({ server });
 
 // Получить все задачи с пагинацией
 app.get("/tasks", async (req, res) => {
@@ -66,29 +56,26 @@ app.post("/tasks", async (req, res) => {
   });
 });
 
-// Обновить задачу (PATCH - частичное обновление)
-// Переключить состояние задачи
-app.patch("/tasks/:id/toggle", async (req, res) => {
-  let tasks = await readTasks();
+// Обновление задачи (включая переключение статуса)
+app.patch("/tasks/:id", async (req, res) => {
   const { id } = req.params;
+  let tasks = await readTasks();
 
-  let task = tasks.find((task) => task.id == id);
-  if (!task) {
+  const taskIndex = tasks.findIndex((task) => task.id == id);
+  if (taskIndex === -1) {
     return res.status(404).json({ message: "Task not found" });
   }
 
-  // Переключаем состояние задачи
-  task.completed = !task.completed;
+  // Обновляем только те поля, которые приходят в запросе
+  const updatedTask = {
+    ...tasks[taskIndex],
+    ...req.body, // Если приходит поле completed, то оно также будет обновлено
+  };
+
+  tasks[taskIndex] = updatedTask;
 
   await writeTasks(tasks);
-  res.json(task);
-
-  // Отправляем уведомление через WebSocket, если нужно
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(`Task ${id} status has been updated.`);
-    }
-  });
+  res.json(updatedTask);  // Возвращаем обновленную задачу
 });
 
 // Удалить задачу
@@ -102,16 +89,15 @@ app.delete("/tasks/:id", async (req, res) => {
 
   await writeTasks(newTasks);
   res.json({ success: true });
-
-  // Отправляем уведомление через WebSocket, если нужно
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(`Task ${req.params.id} has been deleted.`);
-    }
-  });
 });
 
-// Запуск сервера
-server.listen(PORT, () => {
-  console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
+// Обработчик для WebSocket подключений
+wss.on("connection", (ws) => {
+  console.log("New WebSocket connection");
+
+  ws.on("message", (message) => {
+    console.log(`Received message: ${message}`);
+  });
+
+  ws.send("Connected to WebSocket server!");
 });

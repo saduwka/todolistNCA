@@ -25,7 +25,7 @@ export default function TaskItem({ task, onEdit, onToggle, onDelete }) {
       <p className={styles.taskDate}>Дата: {formatDate(task.date)}</p> {/* Форматируем дату */}
       <div className={styles.taskButtons}>
         <button className={styles.editButton} onClick={() => onEdit(task)}>✏️</button>
-        <button className={styles.toggleButton} onClick={() => onToggle(task.id)}>
+        <button className={styles.toggleButton} onClick={() => onToggle(task)}>
           {task.completed ? "🔄" : "✅"}
         </button>
         <button className={styles.deleteButton} onClick={() => onDelete(task.id)}>🗑</button>

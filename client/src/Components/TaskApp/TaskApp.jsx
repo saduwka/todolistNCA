@@ -6,7 +6,7 @@ import TaskModal from "../TaskModal/TaskModal";
 import TaskSearch from "../TaskSearch/TaskSearch";
 import { motion } from "framer-motion";
 
-const API_URL = "http://192.168.2.158:5000";
+const API_URL = "http://192.168.2.12:5000";
 
 export default function TaskApp() {
   const [tasks, setTasks] = useState([]);
@@ -65,11 +65,15 @@ export default function TaskApp() {
       setError("");
       const options = { method, headers: { "Content-Type": "application/json" } };
       if (body) options.body = JSON.stringify(body);
+      
       const res = await fetch(url, options);
+      console.log("Response:", res);  // Логируем ответ
       if (!res.ok) throw new Error("Ошибка выполнения запроса");
+  
       await fetchTasks();
     } catch (err) {
       setError(err.message);
+      console.error("Error:", err.message);  // Логируем ошибку
     } finally {
       setLoading(false);
     }
@@ -79,18 +83,50 @@ export default function TaskApp() {
     handleTaskAction(`${API_URL}/tasks`, "POST", { title, description, completed: false, date: new Date().toISOString() });
   };
 
-  const updateTask = ({ title, description }) => {
-    if (!editingTask) return;
-    handleTaskAction(`${API_URL}/tasks/${editingTask.id}`, "PATCH", { title, description });
-    setEditingTask(null);
-    setIsModalOpen(false);
+  const toggleTask = async (task) => {
+    try {
+      const updatedTask = { completed: !task.completed }; // Переключаем только статус
+      const res = await fetch(`${API_URL}/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedTask),
+      });
+  
+      if (!res.ok) throw new Error("Ошибка при переключении задачи");
+  
+      // После успешного обновления получаем обновленный список задач
+      fetchTasks();
+    } catch (err) {
+      console.error("Ошибка обновления задачи:", err);
+    }
   };
 
-  const toggleTask = (id) => handleTaskAction(`${API_URL}/tasks/${id}/toggle`, "PATCH");
+  const updateTask = async (task) => {
+    try {
+      const res = await fetch(`${API_URL}/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(task),  // Здесь task может включать title, description, completed и т.д.
+      });
+  
+      if (!res.ok) throw new Error("Ошибка обновления задачи");
+  
+      // После успешного обновления получаем обновленный список задач
+      fetchTasks();
+    } catch (err) {
+      console.error("Ошибка обновления задачи:", err);
+    }
+  };
+
   const deleteTask = (id) => window.confirm("Удалить задачу?") && handleTaskAction(`${API_URL}/tasks/${id}`, "DELETE");
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setEditingTask(null);  // Сбрасываем задачу для редактирования
   };
 
   return (
@@ -133,7 +169,12 @@ export default function TaskApp() {
         Show More
       </button>
 
-      <TaskModal isOpen={isModalOpen} task={editingTask} onClose={() => setIsModalOpen(false)} onSave={updateTask} />
+      <TaskModal 
+        isOpen={isModalOpen} 
+        task={editingTask} 
+        onClose={handleModalClose} 
+        onSave={updateTask} 
+      />
     </div>
   );
 }
