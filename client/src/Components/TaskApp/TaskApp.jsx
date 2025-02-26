@@ -6,7 +6,8 @@ import TaskModal from "../TaskModal/TaskModal";
 import TaskSearch from "../TaskSearch/TaskSearch";
 import { motion } from "framer-motion";
 
-const API_URL = "http://192.168.2.12:5000";
+const API_URL =
+	"https://todolist-server-3d35k273q-saduwkas-projects.vercel.app";
 
 export default function TaskApp() {
 	const [tasks, setTasks] = useState([]);
