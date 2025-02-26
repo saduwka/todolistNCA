@@ -3,7 +3,7 @@ const cors = require("cors");
 const fs = require("fs").promises;
 const WebSocket = require("ws");
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const TASKS_FILE = "tasks.json";
 
 const app = express();
@@ -34,10 +34,10 @@ const server = app.listen(PORT, () => {
 
 const wss = new WebSocket.Server({ server });
 
-// Получить все задачи с пагинацией
+// Получить все задачи
 app.get("/tasks", async (req, res) => {
 	const tasks = await readTasks();
-	res.json(tasks); // Просто отправляем все задачи
+	res.json(tasks);
 });
 
 // Добавить новую задачу
@@ -48,7 +48,7 @@ app.post("/tasks", async (req, res) => {
 	await writeTasks(tasks);
 	res.json(newTask);
 
-	// Отправляем уведомление через WebSocket, если нужно
+	// Уведомление по WebSocket
 	wss.clients.forEach((client) => {
 		if (client.readyState === WebSocket.OPEN) {
 			client.send("A new task has been added.");
@@ -56,7 +56,7 @@ app.post("/tasks", async (req, res) => {
 	});
 });
 
-// Обновление задачи (включая переключение статуса)
+// Обновление задачи
 app.patch("/tasks/:id", async (req, res) => {
 	const { id } = req.params;
 	let tasks = await readTasks();
@@ -66,16 +66,11 @@ app.patch("/tasks/:id", async (req, res) => {
 		return res.status(404).json({ message: "Task not found" });
 	}
 
-	// Обновляем только те поля, которые приходят в запросе
-	const updatedTask = {
-		...tasks[taskIndex],
-		...req.body, // Если приходит поле completed, то оно также будет обновлено
-	};
-
+	const updatedTask = { ...tasks[taskIndex], ...req.body };
 	tasks[taskIndex] = updatedTask;
 
 	await writeTasks(tasks);
-	res.json(updatedTask); // Возвращаем обновленную задачу
+	res.json(updatedTask);
 });
 
 // Удалить задачу
@@ -91,12 +86,23 @@ app.delete("/tasks/:id", async (req, res) => {
 	res.json({ success: true });
 });
 
-// Обработчик для WebSocket подключений
+// WebSocket соединение
 wss.on("connection", (ws) => {
 	console.log("New WebSocket connection");
 
 	ws.on("message", (message) => {
 		console.log(`Received message: ${message}`);
+	});
+
+	// Пинг для поддержания соединения
+	const interval = setInterval(() => {
+		if (ws.readyState === WebSocket.OPEN) {
+			ws.send(JSON.stringify({ type: "ping" }));
+		}
+	}, 30000);
+
+	ws.on("close", () => {
+		clearInterval(interval);
 	});
 
 	ws.send("Connected to WebSocket server!");
