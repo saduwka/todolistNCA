@@ -1,10 +1,9 @@
 [
-  {
-    "id": 1739865248831,
-    "completed": false,
-    "title": "Title",
-    "description": "descroption",
-    "date": "2025-02-18T07:54:08.820Z"
-  },
-  
+	{
+		"id": 1739865248831,
+		"completed": false,
+		"title": "Title",
+		"description": "descroption",
+		"date": "2025-02-18T07:54:08.820Z"
+	}
 ]

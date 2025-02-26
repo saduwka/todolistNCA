@@ -1,0 +1,62 @@
+{
+	"[javascriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.tabSize": 4,
+		"editor.insertSpaces": false
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.tabSize": 4,
+		"editor.insertSpaces": false
+	},
+	"editor.detectIndentation": false,
+
+	"editor.formatOnSave": true,
+	"editor.formatOnPaste": true,
+	"prettier.useTabs": true,
+	"prettier.semi": true,
+
+	"prettier.singleQuote": false,
+	"prettier.arrowParens": "always",
+	"cSpell.language": "en,ru",
+	"editor.wordWrap": "on",
+	"prettier.trailingComma": "all",
+	"git.confirmSync": false,
+	"javascript.validate.enable": true,
+	"javascript.suggest.names": true,
+	"editor.comments.insertSpace": true,
+
+	"editor.tabSize": 4,
+	"editor.insertSpaces": true,
+	"prettier.tabWidth": 4,
+
+	// Хлебные крошки
+	"breadcrumbs.enabled": true,
+
+	// Включает автодополнения внутри строк. Например, если в строке начинаешь вводить "hel", редактор предложит варианты вроде "hello".
+	"editor.quickSuggestions": {
+		"strings": true
+	},
+
+	// Устанавливает тему и настраивает подсветку переменных. Например, делает их курсивом и окрашивает в другой цвет.
+	"workbench.colorTheme": "GitHub Dark Default",
+	"editor.tokenColorCustomizations": {
+		"textMateRules": [
+			{
+				"scope": "variable",
+				"settings": {
+					"fontStyle": "italic",
+					"foreground": "#FF9E64"
+				}
+			}
+		]
+	},
+	"files.autoSave": "afterDelay",
+	"files.autoSaveDelay": 1000,
+	"eslint.enable": true,
+	"eslint.run": "onSave",
+	"editor.minimap.enabled": true,
+	"editor.renderWhitespace": "all",
+	"git.enableSmartCommit": true,
+	"git.autofetch": true
+}

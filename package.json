@@ -1,6 +1,12 @@
 {
-  "dependencies": {
-    "web-vitals": "^4.2.4",
-    "ws": "^8.18.0"
-  }
+	"dependencies": {
+		"web-vitals": "^4.2.4",
+		"ws": "^8.18.0"
+	},
+	"devDependencies": {
+		"prettier": "3.5.2"
+	},
+	"scripts": {
+		"format": "prettier --write ."
+	}
 }
