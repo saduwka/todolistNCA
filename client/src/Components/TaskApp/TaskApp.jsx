@@ -9,172 +9,196 @@ import { motion } from "framer-motion";
 const API_URL = "http://192.168.2.12:5000";
 
 export default function TaskApp() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("active");
-  const [editingTask, setEditingTask] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [visibleTasksCount, setVisibleTasksCount] = useState(5); // Начинаем с 5 задач
+	const [tasks, setTasks] = useState([]);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState("");
+	const [activeTab, setActiveTab] = useState("active");
+	const [editingTask, setEditingTask] = useState(null);
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [visibleTasksCount, setVisibleTasksCount] = useState(5); // Начинаем с 5 задач
 
-  const fetchTasks = useCallback(async () => {
-    try {
-      setError("");
-      setLoading(true);
-      const res = await fetch(`${API_URL}/tasks`);
-      if (!res.ok) throw new Error("Ошибка загрузки данных");
-      const data = await res.json();
+	const fetchTasks = useCallback(async () => {
+		try {
+			setError("");
+			setLoading(true);
+			const res = await fetch(`${API_URL}/tasks`);
+			if (!res.ok) throw new Error("Ошибка загрузки данных");
+			const data = await res.json();
 
-      if (Array.isArray(data)) {
-        setTasks(data);
-      } else if (Array.isArray(data.tasks)) {
-        setTasks(data.tasks);
-      } else {
-        throw new Error("Неверный формат данных");
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+			if (Array.isArray(data)) {
+				setTasks(data);
+			} else if (Array.isArray(data.tasks)) {
+				setTasks(data.tasks);
+			} else {
+				throw new Error("Неверный формат данных");
+			}
+		} catch (err) {
+			setError(err.message);
+		} finally {
+			setLoading(false);
+		}
+	}, []);
 
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+	useEffect(() => {
+		fetchTasks();
+	}, [fetchTasks]);
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      const isStatusMatch =
-        activeTab === "active" ? !task.completed : task.completed;
-      const isSearchMatch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
-      return isStatusMatch && isSearchMatch;
-    });
-  }, [tasks, activeTab, searchQuery]);
+	const filteredTasks = useMemo(() => {
+		return tasks.filter((task) => {
+			const isStatusMatch =
+				activeTab === "active" ? !task.completed : task.completed;
+			const isSearchMatch = task.title
+				.toLowerCase()
+				.includes(searchQuery.toLowerCase());
+			return isStatusMatch && isSearchMatch;
+		});
+	}, [tasks, activeTab, searchQuery]);
 
-  const visibleTasks = filteredTasks.slice(0, visibleTasksCount); // Ограничиваем количество видимых задач
+	const visibleTasks = filteredTasks.slice(0, visibleTasksCount);
 
-  const loadMoreTasks = () => {
-    setVisibleTasksCount((prevCount) => prevCount + 5); // Увеличиваем на 5
-  };
+	const loadMoreTasks = () => {
+		setVisibleTasksCount((prevCount) => prevCount + 5);
+	};
 
-  const handleTaskAction = async (url, method, body = null) => {
-    try {
-      setLoading(true);
-      setError("");
-      const options = { method, headers: { "Content-Type": "application/json" } };
-      if (body) options.body = JSON.stringify(body);
-      
-      const res = await fetch(url, options);
-      console.log("Response:", res);  // Логируем ответ
-      if (!res.ok) throw new Error("Ошибка выполнения запроса");
-  
-      await fetchTasks();
-    } catch (err) {
-      setError(err.message);
-      console.error("Error:", err.message);  // Логируем ошибку
-    } finally {
-      setLoading(false);
-    }
-  };
+	const handleTaskAction = async (url, method, body = null) => {
+		try {
+			setLoading(true);
+			setError("");
+			const options = {
+				method,
+				headers: { "Content-Type": "application/json" },
+			};
+			if (body) options.body = JSON.stringify(body);
 
-  const addTask = ({ title, description }) => {
-    handleTaskAction(`${API_URL}/tasks`, "POST", { title, description, completed: false, date: new Date().toISOString() });
-  };
+			const res = await fetch(url, options);
+			console.log("Response:", res);
+			if (!res.ok) throw new Error("Ошибка выполнения запроса");
 
-  const toggleTask = async (task) => {
-    try {
-      const updatedTask = { completed: !task.completed }; // Переключаем только статус
-      const res = await fetch(`${API_URL}/tasks/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedTask),
-      });
-  
-      if (!res.ok) throw new Error("Ошибка при переключении задачи");
-  
-      // После успешного обновления получаем обновленный список задач
-      fetchTasks();
-    } catch (err) {
-      console.error("Ошибка обновления задачи:", err);
-    }
-  };
+			await fetchTasks();
+		} catch (err) {
+			setError(err.message);
+			console.error("Error:", err.message);
+		} finally {
+			setLoading(false);
+		}
+	};
 
-  const updateTask = async (task) => {
-    try {
-      const res = await fetch(`${API_URL}/tasks/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(task),  // Здесь task может включать title, description, completed и т.д.
-      });
-  
-      if (!res.ok) throw new Error("Ошибка обновления задачи");
-  
-      // После успешного обновления получаем обновленный список задач
-      fetchTasks();
-    } catch (err) {
-      console.error("Ошибка обновления задачи:", err);
-    }
-  };
+	const addTask = ({ title, description }) => {
+		handleTaskAction(`${API_URL}/tasks`, "POST", {
+			title,
+			description,
+			completed: false,
+			date: new Date().toISOString(),
+		});
+	};
 
-  const deleteTask = (id) => window.confirm("Удалить задачу?") && handleTaskAction(`${API_URL}/tasks/${id}`, "DELETE");
+	const toggleTask = async (task) => {
+		try {
+			const updatedTask = { completed: !task.completed };
+			const res = await fetch(`${API_URL}/tasks/${task.id}`, {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(updatedTask),
+			});
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
+			if (!res.ok) throw new Error("Ошибка при переключении задачи");
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setEditingTask(null);  // Сбрасываем задачу для редактирования
-  };
+			fetchTasks();
+		} catch (err) {
+			console.error("Ошибка обновления задачи:", err);
+		}
+	};
 
-  return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>📝 Tasks</h1>
-      {error && <p className={styles.error}>{error}</p>}
+	const updateTask = async (task) => {
+		try {
+			const res = await fetch(`${API_URL}/tasks/${task.id}`, {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(task),
+			});
 
-      <TaskForm onAdd={addTask} loading={loading} />
-      <TaskSearch onSearch={setSearchQuery} />
+			if (!res.ok) throw new Error("Ошибка обновления задачи");
 
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tabButton} ${activeTab === "active" ? styles.activeTab : ""}`}
-          onClick={() => setActiveTab("active")}
-        >
-          <motion.span whileTap={{ scale: 0.9 }}>In Progress</motion.span>
-        </button>
-        <button
-          className={`${styles.tabButton} ${activeTab === "completed" ? styles.activeTab : ""}`}
-          onClick={() => setActiveTab("completed")}
-        >
-          <motion.span whileTap={{ scale: 0.9 }}>Completed</motion.span>
-        </button>
-      </div>
+			fetchTasks();
+		} catch (err) {
+			console.error("Ошибка обновления задачи:", err);
+		}
+	};
 
-      {loading && <p className={styles.loading}>Загрузка...</p>}
+	const deleteTask = (id) =>
+		window.confirm("Удалить задачу?") &&
+		handleTaskAction(`${API_URL}/tasks/${id}`, "DELETE");
 
-      <TaskList
-        tasks={visibleTasks} // Передаем только видимые задачи
-        onEdit={(task) => { setEditingTask(task); setIsModalOpen(true); }}
-        onToggle={toggleTask}
-        onDelete={deleteTask}
-      />
+	const handleTabChange = (tab) => {
+		setActiveTab(tab);
+	};
 
-      <button 
-        className={styles.showMoreButton} 
-        onClick={loadMoreTasks}
-        disabled={visibleTasksCount >= filteredTasks.length}
-      >
-        Show More
-      </button>
+	const handleModalClose = () => {
+		setIsModalOpen(false);
+		setEditingTask(null);
+	};
 
-      <TaskModal 
-        isOpen={isModalOpen} 
-        task={editingTask} 
-        onClose={handleModalClose} 
-        onSave={updateTask} 
-      />
-    </div>
-  );
+	const activeTasksCount = tasks.filter((task) => !task.completed).length;
+	const completedTasksCount = tasks.filter((task) => task.completed).length;
+
+	return (
+		<>
+			<div className={styles.animatedBackground}></div>{" "}
+			{/* Фон отдельным слоем */}
+			<div className={styles.container}>
+				<h1 className={styles.title}>📝 Tasks</h1>
+				{error && <p className={styles.error}>{error}</p>}
+
+				<TaskForm onAdd={addTask} loading={loading} />
+				<TaskSearch onSearch={setSearchQuery} />
+
+				<div className={styles.tabs}>
+					<button
+						className={`${styles.tabButton} ${activeTab === "active" ? styles.activeTab : ""}`}
+						onClick={() => setActiveTab("active")}
+					>
+						<motion.span whileTap={{ scale: 0.9 }}>
+							In Progress ({activeTasksCount})
+						</motion.span>
+					</button>
+					<button
+						className={`${styles.tabButton} ${activeTab === "completed" ? styles.activeTab : ""}`}
+						onClick={() => setActiveTab("completed")}
+					>
+						<motion.span whileTap={{ scale: 0.9 }}>
+							Completed ({completedTasksCount})
+						</motion.span>
+					</button>
+				</div>
+
+				{loading && <p className={styles.loading}>Загрузка...</p>}
+
+				<TaskList
+					tasks={visibleTasks}
+					onEdit={(task) => {
+						setEditingTask(task);
+						setIsModalOpen(true);
+					}}
+					onToggle={toggleTask}
+					onDelete={deleteTask}
+				/>
+
+				<button
+					className={styles.showMoreButton}
+					onClick={loadMoreTasks}
+					disabled={visibleTasksCount >= filteredTasks.length}
+				>
+					Show More
+				</button>
+
+				<TaskModal
+					isOpen={isModalOpen}
+					task={editingTask}
+					onClose={handleModalClose}
+					onSave={updateTask}
+				/>
+			</div>
+		</>
+	);
 }

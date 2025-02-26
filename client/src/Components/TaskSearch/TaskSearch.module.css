@@ -1,38 +1,37 @@
 .searchContainer {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-  
-  .searchInput {
-    width: 100%;
-    max-width: 400px;
-    padding: 10px;
-    border: 2px solid #2a2a3b;
-    background: #2a2a3b;
-    color: #ddd;
-    font-size: 16px;
-    border-radius: 8px;
-    outline: none;
-    transition: all 0.3s ease-in-out;
-  }
-  
-  .searchInput::placeholder {
-    color: #888;
-  }
-  
-  .searchInput:focus {
-    border-color: #ff9800;
-    background: #1e1e2e;
-    color: white;
-    transform: scale(1.02);
-  }
-  
-  /* Адаптация под мобильные устройства */
-  @media (max-width: 600px) {
-    .searchInput {
-      font-size: 14px;
-      padding: 8px;
-    }
-  }
-  
+	display: flex;
+	justify-content: center;
+	margin: 20px 0;
+}
+
+.searchInput {
+	width: 100%;
+	max-width: 400px;
+	padding: 10px;
+	border: 2px solid #2a2a3b;
+	background: #2a2a3b;
+	color: #ddd;
+	font-size: 16px;
+	border-radius: 8px;
+	outline: none;
+	transition: all 0.3s ease-in-out;
+}
+
+.searchInput::placeholder {
+	color: #888;
+}
+
+.searchInput:focus {
+	border-color: #ff9800;
+	background: #1e1e2e;
+	color: white;
+	transform: scale(1.02);
+}
+
+/* Адаптация под мобильные устройства */
+@media (max-width: 600px) {
+	.searchInput {
+		font-size: 14px;
+		padding: 8px;
+	}
+}
