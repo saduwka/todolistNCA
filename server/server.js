@@ -2,8 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const WebSocket = require("ws");
 const admin = require("firebase-admin");
+require("dotenv").config();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Инициализация Firebase Admin SDK
 const firebaseCredentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
@@ -62,7 +63,7 @@ app.post("/tasks", async (req, res) => {
   // Уведомление по WebSocket
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
-      client.send("A new task has been added.");
+      client.send(JSON.stringify({ type: "new_task", task: savedTask }));
     }
   });
 });
@@ -73,6 +74,13 @@ app.patch("/tasks/:id", async (req, res) => {
   try {
     const updatedTask = await updateTask(id, req.body);
     res.json(updatedTask);
+
+    // Уведомление по WebSocket
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ type: "update_task", task: updatedTask }));
+      }
+    });
   } catch (error) {
     res.status(404).json({ message: "Task not found" });
   }
@@ -84,14 +92,21 @@ app.delete("/tasks/:id", async (req, res) => {
   try {
     await deleteTask(id);
     res.json({ success: true });
+
+    // Уведомление по WebSocket
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ type: "delete_task", id }));
+      }
+    });
   } catch (error) {
     res.status(404).json({ message: "Task not found" });
   }
 });
 
 // WebSocket соединение
-wss.on("connection", (ws) => {
-  console.log("New WebSocket connection");
+wss.on("connection", (ws, req) => {
+  console.log(`New WebSocket connection from ${req.socket.remoteAddress}`);
 
   ws.on("message", (message) => {
     console.log(`Received message: ${message}`);
@@ -105,7 +120,8 @@ wss.on("connection", (ws) => {
   }, 30000);
 
   ws.on("close", () => {
-	console.log(`New WebSocket connection from ${req.socket.remoteAddress}`);
+    console.log(`WebSocket connection closed: ${req.socket.remoteAddress}`);
+    clearInterval(interval);
   });
 
   ws.send("Connected to WebSocket server!");
