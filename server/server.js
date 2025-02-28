@@ -4,13 +4,16 @@ const WebSocket = require("ws");
 const admin = require("firebase-admin");
 require("dotenv").config();
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 // Инициализация Firebase Admin SDK
-const firebaseCredentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+const firebaseCredentials = JSON.parse(
+  Buffer.from(process.env.FIREBASE_CREDENTIALS, "base64").toString("utf-8")
+);
 admin.initializeApp({
   credential: admin.credential.cert(firebaseCredentials),
 });
+
 const db = admin.firestore();
 const tasksCollection = db.collection("tasks");
 
