@@ -16,9 +16,7 @@
 		"dotenv": "^16.4.7",
 		"express": "^4.21.2",
 		"firebase-admin": "^13.1.0",
-		"fs": "^0.0.1-security",
-		"web-vitals": "^4.2.4",
-		"ws": "^8.18.1"
+		"web-vitals": "^4.2.4"
 	},
 	"engines": {
 		"node": ">=18"
