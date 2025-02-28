@@ -11,9 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Инициализация Firebase Admin SDK
-const firebaseCredentials = JSON.parse(
-  Buffer.from(process.env.FIREBASE_CREDENTIALS, "base64").toString("utf-8")
-);
+const firebaseCredentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 console.log("Firebase credentials loaded:", firebaseCredentials);
 admin.initializeApp({
   credential: admin.credential.cert(firebaseCredentials),
