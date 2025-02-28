@@ -77,6 +77,16 @@ app.delete("/tasks/:id", async (req, res) => {
   }
 });
 
+const helmet = require('helmet');
+
+// Добавляем Content Security Policy заголовки
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'none'"],
+    imgSrc: ["'self'", "data:"],  // Разрешаем изображения через data URL (base64)
+  }
+}));
+
 // Запускаем сервер
 console.log("Starting server...");
 const server = app.listen(PORT, "0.0.0.0", () => {
