@@ -105,7 +105,7 @@ wss.on("connection", (ws) => {
   }, 30000);
 
   ws.on("close", () => {
-    clearInterval(interval);
+	console.log(`New WebSocket connection from ${req.socket.remoteAddress}`);
   });
 
   ws.send("Connected to WebSocket server!");

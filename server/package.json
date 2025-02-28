@@ -1,7 +1,7 @@
 {
 	"name": "task-manager",
 	"version": "1.0.0",
-	"main": "index.js",
+	"main": "server.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "node server.js"
@@ -17,5 +17,8 @@
 		"fs": "^0.0.1-security",
 		"web-vitals": "^4.2.4",
 		"ws": "^8.18.1"
-	}
+	},
+	"engines": {
+		"node": ">=18"
+		}
 }
