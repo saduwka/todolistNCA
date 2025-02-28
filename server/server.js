@@ -5,9 +5,11 @@ const admin = require("firebase-admin");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
 // Инициализация Firebase Admin SDK
 const firebaseCredentials = JSON.parse(
   Buffer.from(process.env.FIREBASE_CREDENTIALS, "base64").toString("utf-8")
@@ -19,10 +21,6 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const tasksCollection = db.collection("tasks");
-
-const app = express();
-app.use(cors());
-app.use(express.json());
 
 // Читаем задачи из Firestore
 const readTasks = async () => {
@@ -46,11 +44,6 @@ const updateTask = async (id, updatedFields) => {
 const deleteTask = async (id) => {
   await tasksCollection.doc(id).delete();
 };
-
-// Запускаем HTTP сервер и WebSocket сервер
-console.log("Starting server...");
-
-const wss = new WebSocket.Server({ server });
 
 // Получить все задачи
 app.get("/tasks", async (req, res) => {
@@ -108,6 +101,13 @@ app.delete("/tasks/:id", async (req, res) => {
   }
 });
 
+// Запускаем HTTP сервер и WebSocket сервер
+console.log("Starting server...");
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+const wss = new WebSocket.Server({ server });
+
 // WebSocket соединение
 wss.on("connection", (ws, req) => {
   console.log(`New WebSocket connection from ${req.socket.remoteAddress}`);
@@ -130,3 +130,8 @@ wss.on("connection", (ws, req) => {
 
   ws.send("Connected to WebSocket server!");
 });
+
+// Не даем серверу завершиться (Railway иногда убивает контейнеры без активного процесса)
+setInterval(() => {
+  console.log("Server is running...");
+}, 10000);
