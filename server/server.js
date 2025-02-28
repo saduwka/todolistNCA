@@ -5,11 +5,14 @@ const admin = require("firebase-admin");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 5000;
-
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 // Инициализация Firebase Admin SDK
 const firebaseCredentials = JSON.parse(
   Buffer.from(process.env.FIREBASE_CREDENTIALS, "base64").toString("utf-8")
 );
+console.log("Firebase credentials loaded:", firebaseCredentials);
 admin.initializeApp({
   credential: admin.credential.cert(firebaseCredentials),
 });
@@ -46,9 +49,7 @@ const deleteTask = async (id) => {
 
 // Запускаем HTTP сервер и WebSocket сервер
 console.log("Starting server...");
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+
 const wss = new WebSocket.Server({ server });
 
 // Получить все задачи
