@@ -1,109 +1,112 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs").promises;
 const WebSocket = require("ws");
+const admin = require("firebase-admin");
 
 const PORT = process.env.PORT || 5000;
-const TASKS_FILE = "tasks.json";
+
+// Инициализация Firebase Admin SDK
+const firebaseCredentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+admin.initializeApp({
+  credential: admin.credential.cert(firebaseCredentials),
+});
+const db = admin.firestore();
+const tasksCollection = db.collection("tasks");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Читаем задачи из файла
+// Читаем задачи из Firestore
 const readTasks = async () => {
-	try {
-		await fs.access(TASKS_FILE);
-		const data = await fs.readFile(TASKS_FILE, "utf-8");
-		return JSON.parse(data);
-	} catch (err) {
-		await fs.writeFile(TASKS_FILE, "[]");
-		return [];
-	}
+  const snapshot = await tasksCollection.get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
 
-// Записываем задачи в файл
-const writeTasks = async (tasks) => {
-	await fs.writeFile(TASKS_FILE, JSON.stringify(tasks, null, 2));
+// Записываем новую задачу в Firestore
+const writeTask = async (task) => {
+  const docRef = await tasksCollection.add(task);
+  return { id: docRef.id, ...task };
 };
 
-// Создаем HTTP сервер и WebSocket сервер
+// Обновляем задачу в Firestore
+const updateTask = async (id, updatedFields) => {
+  await tasksCollection.doc(id).update(updatedFields);
+  return { id, ...updatedFields };
+};
+
+// Удаляем задачу из Firestore
+const deleteTask = async (id) => {
+  await tasksCollection.doc(id).delete();
+};
+
+// Запускаем HTTP сервер и WebSocket сервер
+console.log("Starting server...");
 const server = app.listen(PORT, () => {
-	console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
-
 const wss = new WebSocket.Server({ server });
 
 // Получить все задачи
 app.get("/tasks", async (req, res) => {
-	const tasks = await readTasks();
-	res.json(tasks);
+  const tasks = await readTasks();
+  res.json(tasks);
 });
 
 // Добавить новую задачу
 app.post("/tasks", async (req, res) => {
-	const tasks = await readTasks();
-	const newTask = { id: Date.now(), completed: false, ...req.body };
-	tasks.unshift(newTask);
-	await writeTasks(tasks);
-	res.json(newTask);
+  const newTask = { completed: false, ...req.body };
+  const savedTask = await writeTask(newTask);
+  res.json(savedTask);
 
-	// Уведомление по WebSocket
-	wss.clients.forEach((client) => {
-		if (client.readyState === WebSocket.OPEN) {
-			client.send("A new task has been added.");
-		}
-	});
+  // Уведомление по WebSocket
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send("A new task has been added.");
+    }
+  });
 });
 
 // Обновление задачи
 app.patch("/tasks/:id", async (req, res) => {
-	const { id } = req.params;
-	let tasks = await readTasks();
-
-	const taskIndex = tasks.findIndex((task) => task.id == id);
-	if (taskIndex === -1) {
-		return res.status(404).json({ message: "Task not found" });
-	}
-
-	const updatedTask = { ...tasks[taskIndex], ...req.body };
-	tasks[taskIndex] = updatedTask;
-
-	await writeTasks(tasks);
-	res.json(updatedTask);
+  const { id } = req.params;
+  try {
+    const updatedTask = await updateTask(id, req.body);
+    res.json(updatedTask);
+  } catch (error) {
+    res.status(404).json({ message: "Task not found" });
+  }
 });
 
 // Удалить задачу
 app.delete("/tasks/:id", async (req, res) => {
-	let tasks = await readTasks();
-	const newTasks = tasks.filter((task) => task.id != req.params.id);
-
-	if (tasks.length === newTasks.length) {
-		return res.status(404).json({ message: "Task not found" });
-	}
-
-	await writeTasks(newTasks);
-	res.json({ success: true });
+  const { id } = req.params;
+  try {
+    await deleteTask(id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(404).json({ message: "Task not found" });
+  }
 });
 
 // WebSocket соединение
 wss.on("connection", (ws) => {
-	console.log("New WebSocket connection");
+  console.log("New WebSocket connection");
 
-	ws.on("message", (message) => {
-		console.log(`Received message: ${message}`);
-	});
+  ws.on("message", (message) => {
+    console.log(`Received message: ${message}`);
+  });
 
-	// Пинг для поддержания соединения
-	const interval = setInterval(() => {
-		if (ws.readyState === WebSocket.OPEN) {
-			ws.send(JSON.stringify({ type: "ping" }));
-		}
-	}, 30000);
+  // Пинг для поддержания соединения
+  const interval = setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "ping" }));
+    }
+  }, 30000);
 
-	ws.on("close", () => {
-		clearInterval(interval);
-	});
+  ws.on("close", () => {
+    clearInterval(interval);
+  });
 
-	ws.send("Connected to WebSocket server!");
+  ws.send("Connected to WebSocket server!");
 });

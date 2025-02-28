@@ -1,20 +1,20 @@
-# Используем Node.js 18
-FROM node:18
+    # Используем Node.js 18
+    FROM node:18
 
-# Указываем рабочую директорию
-WORKDIR /app
+    # Указываем рабочую директорию
+    WORKDIR /app
 
-# Копируем package.json и package-lock.json
-COPY package.json package-lock.json ./
+    # Копируем package.json и package-lock.json
+    COPY package.json package-lock.json ./
 
-# Устанавливаем зависимости
-RUN npm install
+    # Устанавливаем зависимости
+    RUN npm install
 
-# Копируем остальные файлы
-COPY . .
+    # Копируем остальные файлы
+    COPY . .
 
-# Открываем порт
-EXPOSE 5000
+    # Открываем порт
+    EXPOSE 5000
 
-# Запускаем сервер
-CMD ["node", "server.js"]
+    # Запускаем сервер
+    CMD ["node", "server.js"]
