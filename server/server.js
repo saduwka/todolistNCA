@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const WebSocket = require("ws");
 const admin = require("firebase-admin");
 require("dotenv").config();
 
@@ -54,13 +53,6 @@ app.post("/tasks", async (req, res) => {
   const newTask = { completed: false, ...req.body };
   const savedTask = await writeTask(newTask);
   res.json(savedTask);
-
-  // Уведомление по WebSocket
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({ type: "new_task", task: savedTask }));
-    }
-  });
 });
 
 // Обновление задачи
@@ -69,13 +61,6 @@ app.patch("/tasks/:id", async (req, res) => {
   try {
     const updatedTask = await updateTask(id, req.body);
     res.json(updatedTask);
-
-    // Уведомление по WebSocket
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ type: "update_task", task: updatedTask }));
-      }
-    });
   } catch (error) {
     res.status(404).json({ message: "Task not found" });
   }
@@ -87,49 +72,18 @@ app.delete("/tasks/:id", async (req, res) => {
   try {
     await deleteTask(id);
     res.json({ success: true });
-
-    // Уведомление по WebSocket
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ type: "delete_task", id }));
-      }
-    });
   } catch (error) {
     res.status(404).json({ message: "Task not found" });
   }
 });
 
-// Запускаем HTTP сервер и WebSocket сервер
+// Запускаем сервер
 console.log("Starting server...");
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on port ${PORT}`);
 });
-const wss = new WebSocket.Server({ server });
 
-// WebSocket соединение
-wss.on("connection", (ws, req) => {
-  console.log(`New WebSocket connection from ${req.socket.remoteAddress}`);
-
-  ws.on("message", (message) => {
-    console.log(`Received message: ${message}`);
-  });
-
-  // Пинг для поддержания соединения
-  const interval = setInterval(() => {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "ping" }));
-    }
-  }, 30000);
-
-  ws.on("close", () => {
-    console.log(`WebSocket connection closed: ${req.socket.remoteAddress}`);
-    clearInterval(interval);
-  });
-
-  ws.send("Connected to WebSocket server!");
-});
-
-// Не даем серверу завершиться (Railway иногда убивает контейнеры без активного процесса)
+// Не даем серверу завершиться (например, на Railway)
 setInterval(() => {
   console.log("Server is running...");
 }, 10000);
