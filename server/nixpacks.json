@@ -1,0 +1,20 @@
+{
+    "phases": {
+      "setup": {
+        "nixPkgs": ["nodejs_18", "npm"]
+      },
+      "install": {
+        "cmds": [
+          "cd server && npm install"
+        ]
+      },
+      "build": {
+        "cmds": []
+      },
+      "start": {
+        "cmds": [
+          "cd server && node server.js"
+        ]
+      }
+    }
+  }
