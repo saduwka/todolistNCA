@@ -96,4 +96,4 @@ const server = app.listen(PORT, "0.0.0.0", () => {
 // Не даем серверу завершиться (например, на Railway)
 setInterval(() => {
   console.log("Server is running...");
-}, 10000);
+}, 30000);
