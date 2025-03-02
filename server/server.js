@@ -142,8 +142,18 @@ const verifyToken = async (req, res, next) => {
 
 // Применяем защиту для задач
 app.get("/tasks", verifyToken, async (req, res) => {
-  const tasks = await readTasks();
-  res.json(tasks);
+  try {
+    const snapshot = await tasksCollection
+      .where("userId", "==", req.user.uid) // Фильтруем по userId
+      .orderBy("date", "desc")
+      .get();
+    
+    const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    res.json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: "Ошибка при получении задач" });
+  }
 });
 
 app.post("/tasks", verifyToken, async (req, res) => {
