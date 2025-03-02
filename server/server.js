@@ -52,7 +52,7 @@ app.get("/tasks", async (req, res) => {
 app.post("/tasks", async (req, res) => {
   const newTask = {
     completed: false,
-    date: new Date().toISOString(), // Дата создается на сервере
+    date: new Date().toISOString(), 
     ...req.body,
   };
   const savedTask = await writeTask(newTask);
@@ -101,3 +101,58 @@ const server = app.listen(PORT, "0.0.0.0", () => {
 setInterval(() => {
   console.log("Server is running...");
 }, 30000);
+
+// Регистрация нового пользователя
+app.post("/register", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const userRecord = await admin.auth().createUser({ email, password });
+    res.json({ uid: userRecord.uid, email: userRecord.email });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Логин (получение ID токена)
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await admin.auth().getUserByEmail(email);
+    const customToken = await admin.auth().createCustomToken(user.uid);
+    res.json({ token: customToken });
+  } catch (error) {
+    res.status(400).json({ message: "Неверный email или пароль" });
+  }
+});
+
+const verifyToken = async (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1]; // Bearer TOKEN
+  if (!token) {
+    return res.status(401).json({ message: "Нет токена" });
+  }
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = decodedToken; // Добавляем пользователя в запрос
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: "Недействительный токен" });
+  }
+};
+
+// Применяем защиту для задач
+app.get("/tasks", verifyToken, async (req, res) => {
+  const tasks = await readTasks();
+  res.json(tasks);
+});
+
+app.post("/tasks", verifyToken, async (req, res) => {
+  const newTask = {
+    userId: req.user.uid, // Привязываем задачу к пользователю
+    completed: false,
+    date: new Date().toISOString(),
+    ...req.body,
+  };
+  const savedTask = await writeTask(newTask);
+  res.json(savedTask);
+});
