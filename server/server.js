@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
+const helmet = require("helmet");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 8080;
@@ -8,10 +9,17 @@ const PORT = process.env.PORT || 8080;
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'none'"],
+      imgSrc: ["'self'", "data:"],
+    },
+  })
+);
 
 // Инициализация Firebase Admin SDK
 const firebaseCredentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-console.log("Firebase credentials loaded:", firebaseCredentials);
 admin.initializeApp({
   credential: admin.credential.cert(firebaseCredentials),
 });
@@ -19,88 +27,71 @@ admin.initializeApp({
 const db = admin.firestore();
 const tasksCollection = db.collection("tasks");
 
-// Читаем задачи из Firestore
-const readTasks = async () => {
-  const snapshot = await tasksCollection.orderBy("date", "desc").get(); // Сортировка по убыванию даты
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+const verifyToken = async (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "Нет токена" });
+  }
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: "Недействительный токен" });
+  }
 };
 
-// Записываем новую задачу в Firestore
-const writeTask = async (task) => {
-  const docRef = await tasksCollection.add(task);
-  return { id: docRef.id, ...task };
-};
-
-// Обновляем задачу в Firestore
-const updateTask = async (id, updatedFields) => {
-  await tasksCollection.doc(id).update(updatedFields);
-  return { id, ...updatedFields };
-};
-
-// Удаляем задачу из Firestore
-const deleteTask = async (id) => {
-  await tasksCollection.doc(id).delete();
-};
-
-// Получить все задачи
-app.get("/tasks", async (req, res) => {
-  const tasks = await readTasks();
-  res.json(tasks);
+// Получение всех задач пользователя
+app.get("/tasks", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const tasks = await tasksCollection.where("userId", "==", userId).get();
+    res.json(tasks.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+  } catch (error) {
+    res.status(500).json({ message: "Ошибка получения задач" });
+  }
 });
 
-// Добавить новую задачу
-app.post("/tasks", async (req, res) => {
-  const newTask = {
-    completed: false,
-    date: new Date().toISOString(), 
-    ...req.body,
-  };
-  const savedTask = await writeTask(newTask);
-  res.json(savedTask);
+// Добавление новой задачи
+app.post("/tasks", verifyToken, async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const userId = req.user.uid;
+    const newTask = {
+      title,
+      description,
+      completed: false,
+      date: new Date().toISOString(),
+      userId,
+    };
+    const docRef = await tasksCollection.add(newTask);
+    res.status(201).json({ id: docRef.id, ...newTask });
+  } catch (error) {
+    res.status(500).json({ message: "Ошибка при создании задачи" });
+  }
 });
 
 // Обновление задачи
-app.patch("/tasks/:id", async (req, res) => {
-  const { id } = req.params;
+app.patch("/tasks/:id", verifyToken, async (req, res) => {
   try {
-    const updatedTask = await updateTask(id, req.body);
-    res.json(updatedTask);
+    const { id } = req.params;
+    await tasksCollection.doc(id).update(req.body);
+    res.json({ id, ...req.body });
   } catch (error) {
-    res.status(404).json({ message: "Task not found" });
+    res.status(404).json({ message: "Ошибка при обновлении задачи" });
   }
 });
 
-// Удалить задачу
-app.delete("/tasks/:id", async (req, res) => {
-  const { id } = req.params;
+// Удаление задачи
+app.delete("/tasks/:id", verifyToken, async (req, res) => {
   try {
-    await deleteTask(id);
+    const { id } = req.params;
+    await tasksCollection.doc(id).delete();
     res.json({ success: true });
   } catch (error) {
-    res.status(404).json({ message: "Task not found" });
+    res.status(404).json({ message: "Ошибка при удалении задачи" });
   }
 });
-
-const helmet = require('helmet');
-
-// Добавляем Content Security Policy заголовки
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'none'"],
-    imgSrc: ["'self'", "data:"],  // Разрешаем изображения через data URL (base64)
-  }
-}));
-
-// Запускаем сервер
-console.log("Starting server...");
-const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
-// Не даем серверу завершиться (например, на Railway)
-setInterval(() => {
-  console.log("Server is running...");
-}, 30000);
 
 // Регистрация нового пользователя
 app.post("/register", async (req, res) => {
@@ -125,59 +116,8 @@ app.post("/login", async (req, res) => {
   }
 });
 
-const verifyToken = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; // Bearer TOKEN
-  if (!token) {
-    return res.status(401).json({ message: "Нет токена" });
-  }
-
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = decodedToken; // Добавляем пользователя в запрос
-    next();
-  } catch (error) {
-    return res.status(403).json({ message: "Недействительный токен" });
-  }
-};
-
-app.get("/tasks", async (req, res) => {
-  try {
-      const userId = req.user.uid; // 🔹 Получаем userId из аутентификации
-      if (!userId) {
-          return res.status(401).json({ message: "Пользователь не авторизован" });
-      }
-
-      const tasks = await db.collection("tasks")
-          .where("userId", "==", userId) // 🔥 Фильтрация по userId
-          .get();
-
-      const taskList = tasks.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      res.json(taskList);
-  } catch (err) {
-      res.status(500).json({ message: "Ошибка получения задач" });
-  }
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
-app.post("/tasks", async (req, res) => {
-  try {
-      const { title, description } = req.body;
-      const userId = req.user.uid; // 🔹 Получаем userId из запроса
-
-      if (!userId) {
-          return res.status(401).json({ message: "Пользователь не авторизован" });
-      }
-
-      const newTask = {
-          title,
-          description,
-          completed: false,
-          date: new Date().toISOString(),
-          userId, // 🔥 Привязываем задачу к пользователю
-      };
-
-      const taskRef = await db.collection("tasks").add(newTask);
-      res.status(201).json({ id: taskRef.id, ...newTask });
-  } catch (err) {
-      res.status(500).json({ message: "Ошибка при создании задачи" });
-  }
-});
+server.keepAliveTimeout = 60000;
