@@ -143,26 +143,36 @@ const verifyToken = async (req, res, next) => {
 // Применяем защиту для задач
 app.get("/tasks", verifyToken, async (req, res) => {
   try {
+    console.log("Fetching tasks for user:", req.user.uid); // Лог
+
     const snapshot = await tasksCollection
-      .where("userId", "==", req.user.uid) // Фильтруем по userId
+      .where("userId", "==", req.user.uid)
       .orderBy("date", "desc")
       .get();
-    
+
     const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
     res.json(tasks);
   } catch (error) {
+    console.error("Error fetching tasks:", error);
     res.status(500).json({ message: "Ошибка при получении задач" });
   }
 });
 
 app.post("/tasks", verifyToken, async (req, res) => {
-  const newTask = {
-    userId: req.user.uid, // Привязываем задачу к пользователю
-    completed: false,
-    date: new Date().toISOString(),
-    ...req.body,
-  };
-  const savedTask = await writeTask(newTask);
-  res.json(savedTask);
+  try {
+    const newTask = {
+      userId: req.user.uid, // Добавляем привязку к пользователю
+      completed: false,
+      date: new Date().toISOString(),
+      ...req.body, // Сохраняем остальные поля
+    };
+
+    console.log("Saving task for user:", req.user.uid, newTask); // Лог
+
+    const savedTask = await writeTask(newTask);
+    res.json(savedTask);
+  } catch (error) {
+    console.error("Error saving task:", error);
+    res.status(500).json({ message: "Ошибка при добавлении задачи" });
+  }
 });
