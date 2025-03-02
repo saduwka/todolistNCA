@@ -17,13 +17,14 @@
 	border-radius: 6px;
 	background: #2a2a3b;
 	color: #fff;
-	font-size: 16px;
+	font-size: inherit; /* Наследуем шрифт */
 	transition: border-color 0.3s ease-in-out;
+	box-sizing: border-box; /* Исправляет проблему с размерами */
 }
 
 .input:focus,
 .textarea:focus {
-	border-color: #ff9800;
+	border-color: #10b981;
 	outline: none;
 }
 
@@ -33,29 +34,27 @@
 }
 
 .button {
-	background: linear-gradient(135deg, #ff9800, #ff5722);
+	background: linear-gradient(135deg, #10b981, #0ea5e9);
 	color: white;
 	padding: 12px;
-	font-size: 16px;
+	font-size: inherit;
 	border: none;
 	border-radius: 6px;
 	cursor: pointer;
-	transition: all 0.3s ease-in-out;
-}
-
-.button:hover {
-	background: linear-gradient(135deg, #ff5722, #ff9800);
-	transform: scale(1.05);
 }
 
 .button:disabled {
-	background: #444;
-	cursor: not-allowed;
+    background: linear-gradient(135deg, #1e293b, #334155); 
+    color: #64748b; 
+    cursor: not-allowed;
+    opacity: 0.6;
+    pointer-events: none;
 }
 
 @media (max-width: 600px) {
 	.form {
 		padding: 15px;
+		gap: 10px; /* Уменьшаем отступы на мобильных */
 	}
 	.input,
 	.textarea {

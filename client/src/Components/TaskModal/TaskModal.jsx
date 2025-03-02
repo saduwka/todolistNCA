@@ -9,7 +9,7 @@ export default function TaskModal({ isOpen, task, onClose, onSave }) {
 	// Функция сохранения задачи
 	const handleSave = async () => {
 		if (!task?.id) {
-			console.error("ID задачи не найден.");
+			console.error("Task ID not found");
 			return;
 		}
 
@@ -58,7 +58,7 @@ export default function TaskModal({ isOpen, task, onClose, onSave }) {
 					transition={{ duration: 0.3, ease: "easeOut" }}
 					onClick={(e) => e.stopPropagation()}
 				>
-					<h2>Редактировать задачу</h2>
+					<h2>Edit task</h2>
 					<input
 						type="text"
 						className={styles.input}
@@ -71,11 +71,11 @@ export default function TaskModal({ isOpen, task, onClose, onSave }) {
 						onChange={(e) => setDescription(e.target.value)}
 					/>
 					<button className={styles.button} onClick={handleSave}>
-						Сохранить
+						Save
 					</button>
 
 					<button className={styles.cancelButton} onClick={onClose}>
-						Отмена
+						Cancel
 					</button>
 				</motion.div>
 			</motion.div>

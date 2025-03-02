@@ -1,0 +1,143 @@
+@import url("../../colors/colors.css");
+
+html, body {
+    height: 100%;
+    background: var(--gradient-bg);
+    background-size: 400% 400%;
+    animation: gradientAnimation 10s ease infinite;
+  }
+  
+  @keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  /* Контейнер формы */
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .form {
+    background: rgba(30, 41, 59, 0.9);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    width: 320px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .title {
+    color: var(--text-light);
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .inputGroup {
+    margin-bottom: 15px;
+    text-align: left;
+  }
+  
+  .inputGroup label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: var(--text-light);
+  }
+  
+  .input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    font-size: 16px;
+    background: var(--secondary);
+    color: var(--text-light);
+    outline: none;
+    transition: border-color 0.3s ease-in-out;
+  }
+  
+  .input:focus {
+    border-color: var(--button-hover);
+  }
+  
+  .button {
+    width: 100%;
+    padding: 12px;
+    background: var(--gradient-button);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .button:hover {
+    background: linear-gradient(135deg, var(--button-hover), #0ea5e9);
+  }
+  
+  .toggleText {
+    margin-top: 10px;
+    color: var(--text-light);
+  }
+  
+  .toggleText span {
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .toggleText span:hover {
+    color: var(--button-hover);
+  }
+  
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .form {
+      width: 280px;
+      padding: 25px;
+    }
+    
+    .title {
+      font-size: 22px;
+    }
+  
+    .button {
+      font-size: 14px;
+      padding: 10px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .form {
+      width: 260px;
+      padding: 20px;
+    }
+    
+    .title {
+      font-size: 20px;
+    }
+  
+    .button {
+      font-size: 14px;
+      padding: 10px;
+    }
+  }

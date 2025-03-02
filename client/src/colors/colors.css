@@ -1,0 +1,9 @@
+:root {
+    --primary: #0f172a;
+    --secondary: #1e293b;
+    --accent: #10b981;
+    --text-light: #e0e1dd;
+    --button-hover: #14b8a6;
+    --gradient-bg: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+    --gradient-button: linear-gradient(135deg, var(--accent), var(--button-hover));
+  }

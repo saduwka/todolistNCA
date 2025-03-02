@@ -1,107 +1,114 @@
-/* TaskModal.module.css */
 .modalOverlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: rgba(0, 0, 0, 0.6);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
 }
 
 .modal {
-	background: #2a2a3b;
-	color: #fff;
-	padding: 20px;
-	border-radius: 12px;
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-	width: 90%;
-	max-width: 400px;
-	text-align: center;
+    background: #2a2a3b;
+    color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 400px;
+    max-height: 90vh; /* Ограничиваем высоту */
+    overflow-y: auto; /* Добавляем прокрутку при необходимости */
+    text-align: center;
 }
 
 h2 {
-	margin-bottom: 15px;
-	font-size: 20px;
+    margin-bottom: 15px;
+    font-size: 20px;
 }
 
 .input,
 .textarea {
-	width: 100%;
-	padding: 10px;
-	margin-bottom: 15px;
-	border: none;
-	border-radius: 6px;
-	background: #1e1e2e;
-	color: #fff;
-	font-size: 16px;
-	outline: none;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 6px;
+    background: #1e1e2e;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    touch-action: manipulation; /* Отключение жестов масштабирования */
 }
 
 .input {
-	height: 40px;
+    height: 40px;
 }
 
 .textarea {
-	resize: none;
-	height: 80px;
+    resize: none;
+    height: 80px;
 }
 
 .button,
 .cancelButton {
-	width: 100%;
-	padding: 10px;
-	font-size: 16px;
-	border: none;
-	border-radius: 6px;
-	cursor: pointer;
-	transition:
-		background 0.3s,
-		transform 0.2s ease-in-out;
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition:
+        background 0.3s,
+        transform 0.2s ease-in-out;
 }
 
 .button {
-	background: #4caf50;
-	color: #fff;
-	margin-bottom: 10px;
+    background: #4caf50;
+    color: #fff;
+    margin-bottom: 10px;
 }
 
 .button:hover {
-	background: #3d8b40;
-	transform: scale(1.05);
+    background: #3a7a37;
 }
 
 .cancelButton {
-	background: #ff4c4c;
-	color: #fff;
+    background: #ff4c4c;
+    color: #fff;
 }
 
 .cancelButton:hover {
-	background: #d43c3c;
-	transform: scale(1.05);
+    background: #c73636;
 }
 
+/* Объединенный медиазапрос для мобильных устройств */
 @media (max-width: 600px) {
-	.modal {
-		width: 90%;
-		padding: 15px;
-	}
+    .modal {
+        width: 90%;
+        padding: 15px;
+    }
 
-	h2 {
-		font-size: 18px;
-	}
+    h2 {
+        font-size: 18px;
+    }
 
-	.input,
-	.textarea {
-		font-size: 14px;
-	}
+    .input,
+    .textarea {
+        font-size: 14px;
+    }
 
-	.button,
-	.cancelButton {
-		font-size: 14px;
-		padding: 8px;
-	}
+    .button,
+    .cancelButton {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    /* Отключаем возможность масштабирования на мобильных устройствах */
+    input, textarea, select {
+        font-size: 16px !important; /* Отключаем зум на мобильных устройствах */
+        -webkit-text-size-adjust: 100%; /* Для Safari */
+    }
 }

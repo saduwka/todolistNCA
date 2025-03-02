@@ -1,127 +1,241 @@
-/* TaskApp.module.css */
-.container {
-	max-width: 600px;
-	margin: 40px auto;
-	padding: 20px;
-	background: #1e1e2e;
-	border-radius: 12px;
-	box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
-	color: #fff;
-	font-family: "Inter", sans-serif;
-}
+@import "../../colors/colors.css"; /* Подключение файла с цветовыми переменными */
 
-
-
-.title {
-	text-align: center;
-	font-size: 24px;
-	font-weight: bold;
-	margin-bottom: 20px;
-}
-
-.error {
-	color: #ff4c4c;
-	background: rgba(255, 76, 76, 0.2);
-	padding: 10px;
-	border-radius: 8px;
-	text-align: center;
-}
-
-.loading {
-	text-align: center;
-	font-size: 16px;
-	opacity: 0.8;
-}
-
-.tabs {
-	display: flex;
-	justify-content: space-around;
-	margin: 20px 0;
-}
-
-.tabButton {
-	flex: 1;
-	padding: 12px;
-	border: none;
-	background: #2a2a3b;
-	color: #ddd;
-	font-size: 16px;
-	font-weight: bold;
-	cursor: pointer;
-	transition: all 0.3s ease-in-out;
-	border-radius: 8px;
-	margin: 0 5px;
-}
-
-.tabButton:hover {
-	background: #ff9800;
-	color: #fff;
-}
-
-.activeTab {
-	background: linear-gradient(135deg, #ff9800, #ff5722);
-	color: white;
-	transform: scale(1.05);
-}
-
-.showMoreContainer {
-	display: flex;
-	justify-content: center;
-	margin-top: 20px;
-}
-
-.showMoreButton {
-	padding: 10px 20px;
-	background-color: #007bff;
-	color: white;
-	border: none;
-	border-radius: 5px;
-	cursor: pointer;
-	font-size: 16px;
-	transition: background-color 0.3s ease;
-}
-
-.showMoreButton:hover {
-	background-color: #0056b3;
-}
-
-.showMoreButton:disabled {
-	background-color: #cccccc;
-	cursor: not-allowed;
-}
-
-@media (max-width: 600px) {
-	.container {
-		padding: 15px;
-	}
-
-	.title {
-		font-size: 20px;
-	}
-
-	.tabButton {
-		font-size: 14px;
-		padding: 10px;
-	}
-}
-
-.animatedBackground {
-	background: linear-gradient(-45deg, #ff9a9e, #ffdde1, #c2e9fb, #a1c4fd);
-	background-size: 400% 400%;
-	animation: gradientAnimation 10s ease infinite;
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100vh;
-	z-index: -1;
-	filter: brightness(0.8);
+/* 🌌 Основные стили для контейнера */
+html, body {
+    height: 100%;
+    background: var(--gradient-bg);
+    background-size: 400% 400%;
+    animation: gradientAnimation 10s ease infinite;
+    color: var(--text-light);
+    font-family: "Inter", sans-serif;
 }
 
 @keyframes gradientAnimation {
-	0% { background-position: 0% 50%; }
-	50% { background-position: 100% 50%; }
-	100% { background-position: 0% 50%; }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-  
+.container {
+    width: 100vw;
+    height: 100vh;
+    max-width: 1200px;
+    padding: 50px 20px;
+    margin: 0 auto;
+}
+
+
+.avatar {
+    width: 50px;
+    height: 50px;
+}
+/* 🔥 Общий стиль кнопок */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    text-align: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 🌟 Основная кнопка */
+.button-primary {
+    background: var(--gradient-button);
+    color: white;
+}
+
+.button-primary:hover {
+    background: linear-gradient(135deg, var(--button-hover), var(--accent));
+}
+
+/* 🎭 Второстепенная кнопка (например, для отмены) */
+.button-secondary {
+    background: var(--secondary);
+    color: var(--text-light);
+}
+
+.button-secondary:hover {
+    background: #3a3a4b;
+}
+
+/* ❌ Кнопка выхода */
+.button-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.button-danger:hover {
+    background: #c82333;
+}
+
+/* 🔑 Кнопка входа через Google */
+.buttonGoogle {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--gradient-button);
+    color: var(--text-light);
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.authButton {
+    width: fit-content;
+    flex: 1;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--gradient-button);
+    color: var(--text-light);
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.button-google img {
+    width: 20px;
+    margin-right: 10px;
+}
+
+/* 🚫 Стили для отключенной кнопки */
+.button:disabled {
+    background: #444;
+    cursor: not-allowed;
+}
+
+/* 📌 Стили для вкладок */
+.tabs {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.tabButton {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--secondary);
+    color: var(--text-light);
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.activeTab {
+    background: var(--gradient-button);
+    color: white;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* 🔄 Стили для кнопки "Show More" */
+.showMoreButton {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--gradient-button);
+    color: white;
+    transition: all 0.3s ease-in-out;
+}
+
+.showMoreButton:hover {
+    background: linear-gradient(135deg, var(--button-hover), var(--accent));
+}
+
+.showMoreButton:disabled {
+    background: #444;
+    cursor: not-allowed;
+}
+
+/* 📝 Стили для полей ввода */
+.input,
+.textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background: var(--secondary);
+    color: var(--text-light);
+    font-size: 16px;
+    transition: border-color 0.3s ease-in-out;
+}
+
+.input:focus,
+.textarea:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+.textarea {
+    min-height: 80px;
+    resize: none;
+}
+
+/* ❤️ Футер */
+.footer {
+    text-align: center;
+    font-size: 12px;
+    color: #ccc;
+    margin: 20px 0;
+}
+
+.footer .heart {
+    color: var(--accent);
+}
+
+/* 🎭 Адаптивность */
+@media (max-width: 1024px) {
+    .container {
+        padding: 40px 15px;
+    }
+
+    .tabButton, .showMoreButton {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 30px 10px;
+    }
+
+    .tabButton, .showMoreButton {
+        font-size: 14px;
+        padding: 8px 15px;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 20px 10px;
+    }
+
+    .tabButton, .showMoreButton {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+}
+
+@media (max-width: 390px) {
+    .container {
+        padding: 10px 5px;
+    }
+
+    .tabButton, .showMoreButton {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+}

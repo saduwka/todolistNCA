@@ -1,6 +1,6 @@
 {
-	"short_name": "React App",
-	"name": "NCA Task Manager",
+	"short_name": "Tasks",
+	"name": "Task manager",
 	"icons": [
 		{
 			"src": "favicon.ico",

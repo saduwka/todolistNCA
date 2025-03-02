@@ -1,6 +1,7 @@
 .taskList {
 	list-style: none;
 	padding: 0;
+	margin: 0; /* Убираем отступы списка */
 }
 
 .taskItem {
@@ -8,8 +9,10 @@
 	justify-content: space-between;
 	align-items: center;
 	background: #fff;
-	padding: 10px;
-	border-radius: 5px;
-	margin-bottom: 10px;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	padding: 12px; /* Чуть больше пространства */
+	border-radius: 6px; /* Более мягкие углы */
+	margin-bottom: 8px; /* Чуть меньше отступ */
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Улучшенная тень */
+	box-sizing: border-box;
+	word-break: break-word; /* Предотвращает выход текста за границы */
 }

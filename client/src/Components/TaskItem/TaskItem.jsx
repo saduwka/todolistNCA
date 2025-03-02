@@ -26,8 +26,8 @@ export default function TaskItem({ task, onEdit, onToggle, onDelete }) {
 			{task.description && (
 				<p className={styles.taskDescription}>{task.description}</p>
 			)}
-			<p className={styles.taskDate}>Дата: {formatDate(task.date)}</p>{" "}
-			{/* Форматируем дату */}
+			<p className={styles.taskDate}>Date: {formatDate(task.date)}</p>{" "}
+			
 			<div className={styles.taskButtons}>
 				<button
 					className={styles.editButton}
