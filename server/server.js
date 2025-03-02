@@ -140,39 +140,44 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-// Применяем защиту для задач
-app.get("/tasks", verifyToken, async (req, res) => {
+app.get("/tasks", async (req, res) => {
   try {
-    console.log("Fetching tasks for user:", req.user.uid); // Лог
+      const userId = req.user.uid; // 🔹 Получаем userId из аутентификации
+      if (!userId) {
+          return res.status(401).json({ message: "Пользователь не авторизован" });
+      }
 
-    const snapshot = await tasksCollection
-      .where("userId", "==", req.user.uid)
-      .orderBy("date", "desc")
-      .get();
+      const tasks = await db.collection("tasks")
+          .where("userId", "==", userId) // 🔥 Фильтрация по userId
+          .get();
 
-    const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.json(tasks);
-  } catch (error) {
-    console.error("Error fetching tasks:", error);
-    res.status(500).json({ message: "Ошибка при получении задач" });
+      const taskList = tasks.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      res.json(taskList);
+  } catch (err) {
+      res.status(500).json({ message: "Ошибка получения задач" });
   }
 });
 
-app.post("/tasks", verifyToken, async (req, res) => {
+app.post("/tasks", async (req, res) => {
   try {
-    const newTask = {
-      userId: req.user.uid, // Добавляем привязку к пользователю
-      completed: false,
-      date: new Date().toISOString(),
-      ...req.body, // Сохраняем остальные поля
-    };
+      const { title, description } = req.body;
+      const userId = req.user.uid; // 🔹 Получаем userId из запроса
 
-    console.log("Saving task for user:", req.user.uid, newTask); // Лог
+      if (!userId) {
+          return res.status(401).json({ message: "Пользователь не авторизован" });
+      }
 
-    const savedTask = await writeTask(newTask);
-    res.json(savedTask);
-  } catch (error) {
-    console.error("Error saving task:", error);
-    res.status(500).json({ message: "Ошибка при добавлении задачи" });
+      const newTask = {
+          title,
+          description,
+          completed: false,
+          date: new Date().toISOString(),
+          userId, // 🔥 Привязываем задачу к пользователю
+      };
+
+      const taskRef = await db.collection("tasks").add(newTask);
+      res.status(201).json({ id: taskRef.id, ...newTask });
+  } catch (err) {
+      res.status(500).json({ message: "Ошибка при создании задачи" });
   }
 });
