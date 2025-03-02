@@ -21,7 +21,7 @@ const tasksCollection = db.collection("tasks");
 
 // Читаем задачи из Firestore
 const readTasks = async () => {
-  const snapshot = await tasksCollection.get();
+  const snapshot = await tasksCollection.orderBy("date", "desc").get(); // Сортировка по убыванию даты
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
 
@@ -50,7 +50,11 @@ app.get("/tasks", async (req, res) => {
 
 // Добавить новую задачу
 app.post("/tasks", async (req, res) => {
-  const newTask = { completed: false, ...req.body };
+  const newTask = {
+    completed: false,
+    date: new Date().toISOString(), // Дата создается на сервере
+    ...req.body,
+  };
   const savedTask = await writeTask(newTask);
   res.json(savedTask);
 });
