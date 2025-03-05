@@ -5,7 +5,6 @@ const helmet = require("helmet");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 8080;
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -19,10 +18,15 @@ app.use(
 );
 
 // Инициализация Firebase Admin SDK
-const firebaseCredentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
-admin.initializeApp({
-  credential: admin.credential.cert(firebaseCredentials),
-});
+try {
+  const firebaseCredentials = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+  admin.initializeApp({
+    credential: admin.credential.cert(firebaseCredentials),
+  });
+} catch (error) {
+  console.error("Ошибка загрузки Firebase Credentials", error);
+  process.exit(1);
+}
 
 const db = admin.firestore();
 const tasksCollection = db.collection("tasks");
@@ -44,16 +48,16 @@ const verifyToken = async (req, res, next) => {
 // Получение всех задач пользователя
 app.get("/tasks", verifyToken, async (req, res) => {
   try {
-      const userId = req.user.uid;
-      const tasksSnapshot = await db.collection("tasks")
-          .where("userId", "==", userId)
-          .orderBy("date", "desc")
-          .get();
-
-      const tasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      res.json(tasks);
+    const userId = req.user.uid;
+    const tasksSnapshot = await tasksCollection
+      .where("userId", "==", userId)
+      .orderBy("date", "desc")
+      .get();
+    
+    const tasks = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(tasks);
   } catch (error) {
-      res.status(500).json({ message: "Ошибка получения задач" });
+    res.status(500).json({ message: "Ошибка получения задач" });
   }
 });
 
@@ -61,10 +65,13 @@ app.get("/tasks", verifyToken, async (req, res) => {
 app.post("/tasks", verifyToken, async (req, res) => {
   try {
     const { title, description } = req.body;
+    if (!title) {
+      return res.status(400).json({ message: "Заголовок обязателен" });
+    }
     const userId = req.user.uid;
     const newTask = {
       title,
-      description,
+      description: description || "",
       completed: false,
       date: new Date().toISOString(),
       userId,
@@ -80,10 +87,18 @@ app.post("/tasks", verifyToken, async (req, res) => {
 app.patch("/tasks/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    await tasksCollection.doc(id).update(req.body);
+    if (!Object.keys(req.body).length) {
+      return res.status(400).json({ message: "Нет данных для обновления" });
+    }
+    const taskRef = tasksCollection.doc(id);
+    const taskDoc = await taskRef.get();
+    if (!taskDoc.exists || taskDoc.data().userId !== req.user.uid) {
+      return res.status(403).json({ message: "Нет доступа" });
+    }
+    await taskRef.update(req.body);
     res.json({ id, ...req.body });
   } catch (error) {
-    res.status(404).json({ message: "Ошибка при обновлении задачи" });
+    res.status(500).json({ message: "Ошибка при обновлении задачи" });
   }
 });
 
@@ -91,10 +106,15 @@ app.patch("/tasks/:id", verifyToken, async (req, res) => {
 app.delete("/tasks/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    await tasksCollection.doc(id).delete();
+    const taskRef = tasksCollection.doc(id);
+    const taskDoc = await taskRef.get();
+    if (!taskDoc.exists || taskDoc.data().userId !== req.user.uid) {
+      return res.status(403).json({ message: "Нет доступа к удалению" });
+    }
+    await taskRef.delete();
     res.json({ success: true });
   } catch (error) {
-    res.status(404).json({ message: "Ошибка при удалении задачи" });
+    res.status(500).json({ message: "Ошибка при удалении задачи" });
   }
 });
 
@@ -106,18 +126,6 @@ app.post("/register", async (req, res) => {
     res.json({ uid: userRecord.uid, email: userRecord.email });
   } catch (error) {
     res.status(400).json({ message: error.message });
-  }
-});
-
-// Логин (получение ID токена)
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await admin.auth().getUserByEmail(email);
-    const customToken = await admin.auth().createCustomToken(user.uid);
-    res.json({ token: customToken });
-  } catch (error) {
-    res.status(400).json({ message: "Неверный email или пароль" });
   }
 });
 
