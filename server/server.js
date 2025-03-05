@@ -7,26 +7,13 @@ require("dotenv").config();
 const PORT = process.env.PORT || 8080;
 
 const app = express();
-
-// Настройки CORS
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://client-saduwka-saduwkas-projects.vercel.app"); // Разрешаем все домены (лучше указать конкретный)
-  res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") {
-    res.status(204).end(); // Завершаем preflight-запрос
-    return;
-  }
-  next();
-});
-
+app.use(cors());
 app.use(express.json());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
-      defaultSrc: ["'self'"],
+      defaultSrc: ["'none'"],
       imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'", "https://todolistnca-production.up.railway.app"],
     },
   })
 );
@@ -50,7 +37,7 @@ const verifyToken = async (req, res, next) => {
     req.user = decodedToken;
     next();
   } catch (error) {
-    return res.status(403).json({ message: "Недействительный токен" }); // <- Здесь return
+    return res.status(403).json({ message: "Недействительный токен" });
   }
 };
 
@@ -93,22 +80,10 @@ app.post("/tasks", verifyToken, async (req, res) => {
 app.patch("/tasks/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const taskRef = tasksCollection.doc(id);
-    const task = await taskRef.get();
-
-    if (!task.exists) {
-      return res.status(404).json({ message: "Задача не найдена" });
-    }
-
-    // Проверяем, что задача принадлежит текущему пользователю
-    if (task.data().userId !== req.user.uid) {
-      return res.status(403).json({ message: "Нет доступа к этой задаче" });
-    }
-
-    await taskRef.update(req.body);
+    await tasksCollection.doc(id).update(req.body);
     res.json({ id, ...req.body });
   } catch (error) {
-    res.status(500).json({ message: "Ошибка при обновлении задачи" });
+    res.status(404).json({ message: "Ошибка при обновлении задачи" });
   }
 });
 
